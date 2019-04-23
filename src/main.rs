@@ -1,16 +1,14 @@
+#[macro_use]
+extern crate lazy_static;
 extern crate qt_widgets;
+
 mod application;
+mod qt_bind;
 
-use std::os::raw::{c_void, c_char};
-
-use std::mem::transmute;
-
-use std::collections::HashMap;
-
-use qt_widgets::cpp_utils::StaticCast;
 use qt_widgets::qt_core;
 
-use qt_core::object::Object;
+use qt_widgets::cpp_utils::StaticCast;
+
 use qt_core::string::String;
 use qt_core::file::File;
 use qt_core::flags::Flags;
@@ -19,88 +17,22 @@ use qt_core::io_device::{OpenModeFlag, IODevice};
 use qt_ui_tools::ui_loader::UiLoader;
 
 use application::Application;
+use qt_bind::*;
 
-extern "C" {
-    pub fn create(obj: *mut c_void, signal: *const c_char, arg: *mut c_void, callback: *const c_void) -> *mut c_void;
-    pub fn destroy(obj: *mut c_void);
-}
-
-#[macro_export]
-macro_rules! connect_no_args {
-    ($manager: expr, $sender:expr, $signal:expr, $data:expr, $call_type:ident, $callback:path) => {
-        {
-            extern "C" fn temp_call(target: *mut c_void) {
-                unsafe {
-                    let app = target as *mut $call_type; 
-                    $callback(&mut *app);
-                }
-            }
-
-            unsafe {
-                $manager.connect($sender, $signal, transmute($data), temp_call as *mut c_void)
-            }
-        }
-    }
-}
-
-pub struct BindManager {
-    connections: HashMap<(*mut Object, &'static [u8]), *mut c_void>
-}
-
-impl BindManager {
-    pub fn new() -> BindManager {
-        BindManager { connections: HashMap::new() }
-    }
-
-    pub fn connect(&mut self, obj: *mut Object, s: &'static [u8], arg: *mut c_void , callback: *mut c_void) {
-        self.connections.insert((obj, s), unsafe {create(transmute(obj), s.as_ptr() as *const c_char, transmute(arg), callback)});
-    }
-
-    /*
-    fn disconnect(&mut self, obj: *mut Object, s: &'static str) {
-        match self.connections.get(&(obj, s)) {
-            Some(x) => unsafe { destroy(*x) }
-            None => println!("Warning: Attempt to disconnect unbound method")
-        };
-    }
-     */
-}
-
-impl Drop for BindManager {
-    fn drop(&mut self) {
-        for ((_obj, _signal), ptr) in &self.connections {
-            unsafe { destroy(*ptr) }
-        }
-        
-        self.connections.clear();
-    }
-}
-
-fn find_child(widget: *mut Object, name: &str) -> Option<*mut Object> {
-    let children = unsafe {(*widget).children()};
-    for i in 0..children.size() {
-        if unsafe {(**children.at(i)).object_name().compare(&String::from(name)) == 0} {
-            return Some(*children.at(i));
-        }
-        
-        match find_child(*children.at(i), name) {
-            Some(x) => Some(x),
-            None => continue
-        };
-    }
-    None
-}
-
-fn as_object<T: StaticCast<Object>>(w: *mut T) -> *mut Object {
-    unsafe {
-        let obj: &mut T = Box::leak(Box::from_raw(w));
-        
-        T::static_cast_mut(obj) as *mut Object
+macro_rules! version {
+    () => {
+        format!("{}.{}.{}",
+            env!("CARGO_PKG_VERSION_MAJOR"),
+            env!("CARGO_PKG_VERSION_MINOR"),
+            env!("CARGO_PKG_VERSION_PATCH"))
     }
 }
 
 fn main() {
     qt_widgets::application::Application::create_and_exit(|_app| {
+        qt_core::core_application::CoreApplication::set_application_name(&String::from("DSAHelper"));
+        qt_core::core_application::CoreApplication::set_application_version(&String::from(version!().as_str()));
+
         let s = String::from("ui/main_window.ui");
         let mut file = File::new(&s);
         file.open(Flags::from_enum(OpenModeFlag::ReadOnly));
@@ -112,12 +44,11 @@ fn main() {
         }
 
         let mut backend = Application::new();
-        let mut bind_manager = BindManager::new();
         
-        connect_no_args!(&mut bind_manager, find_child(as_object(main_window), "new_file").unwrap(), b"2triggered()\0", &mut backend, Application, Application::new_file);
-        connect_no_args!(&mut bind_manager, find_child(as_object(main_window), "open").unwrap(), b"2triggered()\0", &mut backend, Application, Application::open);
-        connect_no_args!(&mut bind_manager, find_child(as_object(main_window), "close").unwrap(), b"2triggered()\0", &mut backend, Application, Application::close);
-        connect_no_args!(&mut bind_manager, find_child(as_object(main_window), "options").unwrap(), b"2triggered()\0", &mut backend, Application, Application::options);
+        connect!(find_child(main_window, "new_file").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::new_file);
+        connect!(find_child(main_window, "open").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::open);
+        connect!(find_child(main_window, "close").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::close);
+        connect!(find_child(main_window, "options").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::options);
         qt_widgets::application::Application::exec()
     })
 }

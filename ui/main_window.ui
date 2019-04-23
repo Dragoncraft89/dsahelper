@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>DSAHelper</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -64,8 +64,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>490</width>
-                 <height>227</height>
+                 <width>494</width>
+                 <height>211</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_3">
@@ -100,7 +100,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>35</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatei">
@@ -124,6 +124,9 @@
   <action name="open">
    <property name="text">
     <string>&amp;Öffnen</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="close">
@@ -154,6 +157,9 @@
   <action name="new_file">
    <property name="text">
     <string>&amp;Neu</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>
