@@ -105,6 +105,7 @@ name = "dsa_helper"
 version = "0.0.0"
 dependencies = [
  "cc 1.0.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "qt_ui_tools 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "qt_widgets 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.90 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -191,6 +192,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "pkg-config"
+version = "0.3.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "qt_build_tools"
@@ -505,6 +511,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)" = "92e5113e9fd4cc14ded8e499429f396a20f98c772a47cc8622a736e1ec843c31"
 "checksum num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0b3a5d7cc97d6d30d8b9bc8fa19bf45349ffe46241e8816f50f62f6d6aaabee1"
 "checksum num_cpus 1.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1a23f0ed30a54abaa0c7e83b1d2d87ada7c3c23078d1d87815af3e3b6385fbba"
+"checksum pkg-config 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)" = "676e8eb2b1b4c9043511a9b7bea0915320d7e502b0a079fb03f9635a5252b18c"
 "checksum qt_build_tools 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "9bd735d34f0ffc9d882c935506361bbbded02453d491abde05034c7e6c5bb1fd"
 "checksum qt_core 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "1f19047366f10cc5c714b3ee8a743094a40fa997e7dfe6898de3e0de5b895c67"
 "checksum qt_generator_common 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "152a5b24bcf4553fce71f0648688554207592dec1d1ede1d2c43558c9f26f61e"
