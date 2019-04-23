@@ -1,0 +1,15 @@
+[package]
+name = "dsa_helper"
+version = "0.0.0"
+authors = ["Florian Kothmeier <floriankothmeier@web.de>"]
+edition = "2018"
+
+build = "build.rs"
+
+[dependencies]
+qt_widgets = "0.2.3"
+qt_ui_tools = "0.2.3"
+serde = "1.0"
+
+[build-dependencies]
+cc = "1.0"
