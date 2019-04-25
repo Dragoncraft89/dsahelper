@@ -35,6 +35,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="edit_player">
+            <property name="text">
+             <string>✎</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="remove_player">
             <property name="text">
              <string>-</string>
@@ -51,36 +58,13 @@
          <widget class="QTabWidget" name="tabWidget">
           <widget class="QWidget" name="map">
            <attribute name="title">
-            <string>Tab 1</string>
+            <string>Karte</string>
            </attribute>
-           <layout class="QGridLayout" name="gridLayout_2">
-            <item row="0" column="0">
-             <widget class="QScrollArea" name="scrollArea">
-              <property name="widgetResizable">
-               <bool>true</bool>
-              </property>
-              <widget class="QWidget" name="scrollAreaWidgetContents">
-               <property name="geometry">
-                <rect>
-                 <x>0</x>
-                 <y>0</y>
-                 <width>494</width>
-                 <height>211</height>
-                </rect>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_3">
-                <item row="0" column="0">
-                 <widget class="QGraphicsView" name="graphicsView"/>
-                </item>
-               </layout>
-              </widget>
-             </widget>
-            </item>
-           </layout>
+           <layout class="QGridLayout" name="gridLayout_2"/>
           </widget>
           <widget class="QWidget" name="playerdata">
            <attribute name="title">
-            <string>Tab 2</string>
+            <string>Charakterbogen</string>
            </attribute>
           </widget>
          </widget>
@@ -100,7 +84,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>35</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatei">

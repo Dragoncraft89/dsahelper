@@ -14,10 +14,12 @@ use qt_core::file::File;
 use qt_core::flags::Flags;
 use qt_core::io_device::{OpenModeFlag, IODevice};
 
+use qt_widgets::list_view::ListView;
+
 use qt_ui_tools::ui_loader::UiLoader;
 
 use application::Application;
-use qt_bind::*;
+use crate::qt_bind::*;
 
 macro_rules! version {
     () => {
@@ -43,12 +45,19 @@ fn main() {
             (*main_window).show();
         }
 
-        let mut backend = Application::new();
+        let mut backend = Application::new(main_window);
         
         connect!(find_child(main_window, "new_file").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::new_file);
         connect!(find_child(main_window, "open").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::open);
         connect!(find_child(main_window, "close").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::close);
         connect!(find_child(main_window, "options").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::options);
+
+        connect!(as_object((*(find_child(main_window, "players").unwrap() as *mut ListView)).selection_model()), SIGNAL!("currentChanged(const QModelIndex &, const QModelIndex &)"), &mut backend, Application, Application::selection_changed);
+        
+        connect!(find_child(main_window, "add_player").unwrap(), SIGNAL!("pressed()"), &mut backend, Application, Application::add_player);
+        connect!(find_child(main_window, "edit_player").unwrap(), SIGNAL!("pressed()"), &mut backend, Application, Application::edit_player);
+        connect!(find_child(main_window, "remove_player").unwrap(), SIGNAL!("pressed()"), &mut backend, Application, Application::remove_player);
+
         qt_widgets::application::Application::exec()
     })
 }

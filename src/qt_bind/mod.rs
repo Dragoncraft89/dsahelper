@@ -18,7 +18,7 @@ extern "C" {
     fn destroy(obj: *mut c_void);
 }
 
-fn as_object<T: StaticCast<Object>>(w: *mut T) -> *mut Object {
+pub fn as_object<T: StaticCast<Object>>(w: *mut T) -> *mut Object {
     unsafe {
         let obj: &mut T = Box::leak(Box::from_raw(w));
         
@@ -36,17 +36,19 @@ impl BindManager {
     }
 
     pub fn connect(&mut self, obj: *mut Object, s: &'static [u8], arg: *mut c_void , callback: *mut c_void) {
-        self.connections.insert((obj, s), unsafe {create(transmute(obj), s.as_ptr() as *const c_char, transmute(arg), callback)});
+        if let Some(var) = self.connections.insert((obj, s), unsafe {create(transmute(obj), s.as_ptr() as *const c_char, transmute(arg), callback)}) {
+            unsafe { destroy(var) }
+        };
     }
 
     /*
-    fn disconnect(&mut self, obj: *mut Object, s: &'static str) {
+    pub fn disconnect(&mut self, obj: *mut Object, s: &'static [u8]) {
         match self.connections.get(&(obj, s)) {
             Some(x) => unsafe { destroy(*x) }
             None => println!("Warning: Attempt to disconnect unbound method")
         };
     }
-     */
+    */
 }
 
 impl Drop for BindManager {
@@ -83,6 +85,15 @@ macro_rules! connect {
     }
 }
 
+#[macro_export]
+macro_rules! disconnect {
+    ($sender:expr, $signal:expr, $data:expr, $call_type:ident, $callback:path) => {
+        {
+            qt_bind::MANAGER.lock().unwrap().disconnect($sender, $signal)
+        }
+    }
+}
+
 pub fn find_child<T: StaticCast<Object>>(t: *mut T, name: &str) -> Option<*mut Object> {
     let obj = as_object(t);
     find_child_internal(obj, name)
@@ -94,11 +105,10 @@ fn find_child_internal(obj: *mut Object, name: &str) -> Option<*mut Object> {
         if unsafe {(**children.at(i)).object_name().compare(&String::from(name)) == 0} {
             return Some(*children.at(i));
         }
-        
-        match find_child_internal(*children.at(i), name) {
-            Some(x) => Some(x),
-            None => continue
-        };
+
+        if let Some(x) = find_child_internal(*children.at(i), name) {
+            return Some(x)
+        }
     }
     None
 }
