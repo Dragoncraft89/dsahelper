@@ -2,8 +2,8 @@
 extern crate lazy_static;
 extern crate qt_widgets;
 
-mod application;
 mod qt_bind;
+mod application;
 
 use qt_widgets::qt_core;
 
@@ -52,7 +52,8 @@ fn main() {
         connect!(find_child(main_window, "close").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::close);
         connect!(find_child(main_window, "options").unwrap(), SIGNAL!("triggered()"), &mut backend, Application, Application::options);
 
-        connect!(as_object((*(find_child(main_window, "players").unwrap() as *mut ListView)).selection_model()), SIGNAL!("currentChanged(const QModelIndex &, const QModelIndex &)"), &mut backend, Application, Application::selection_changed);
+        let selection_model = unsafe {(*(find_child(main_window, "players").unwrap() as *mut ListView)).selection_model()};
+        connect!(as_object(selection_model), SIGNAL!("selectionChanged(const QItemSelection &, const QItemSelection &)"), &mut backend, Application, Application::selection_changed, selection_model, *mut qt_core::item_selection_model::ItemSelectionModel);
         
         connect!(find_child(main_window, "add_player").unwrap(), SIGNAL!("pressed()"), &mut backend, Application, Application::add_player);
         connect!(find_child(main_window, "edit_player").unwrap(), SIGNAL!("pressed()"), &mut backend, Application, Application::edit_player);
