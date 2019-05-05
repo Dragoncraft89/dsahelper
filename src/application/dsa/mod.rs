@@ -98,7 +98,7 @@ impl PenAndPaperBackend for DSABackend {
         }
         
         fn remaining_points_abilities(sheet: &CharacterSheet, _c: &StatCategory, p: &Player) -> i8 {
-            let sum_category = |c| {
+            let sum_category = |c: &StatCategory| {
                 c.stats.iter().fold(0, |x, s| {x + p.get_value(&s.stat)})
             };
             sheet.categories().iter().filter(|c| {c.name != "Attribute"}).map(sum_category).fold(60, |x, n| { x - n})
