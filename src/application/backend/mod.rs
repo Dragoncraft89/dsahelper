@@ -57,12 +57,13 @@ impl StatCategory {
 pub struct CharacterSheet {
     categories: Vec<StatCategory>,
 
-    evaluator: fn(&CharacterSheet, &Player, &StatCategory, &Stat, i8) -> i8
+    evaluator: fn(&CharacterSheet, &Player, &StatCategory, &Stat, i8) -> i8,
+    calc: fn(&CharacterSheet, &Player, &StatCategory, &Stat) -> i8
 }
 
 impl CharacterSheet {
-    pub fn new(evaluator: fn(&CharacterSheet, &Player, &StatCategory, &Stat, i8) -> i8) -> CharacterSheet {
-        CharacterSheet {categories: Vec::new(), evaluator: evaluator}
+    pub fn new(evaluator: fn(&CharacterSheet, &Player, &StatCategory, &Stat, i8) -> i8, calc: fn(&CharacterSheet, &Player, &StatCategory, &Stat) -> i8) -> CharacterSheet {
+        CharacterSheet {categories: Vec::new(), evaluator: evaluator, calc: calc}
     }
     
     pub fn get_category(&self, name: &String) -> Option<&StatCategory> {
@@ -85,6 +86,10 @@ impl CharacterSheet {
 
     pub fn validate_value(&self, p: &Player, c: &StatCategory, s: &Stat, new_value: i8) -> i8 {
         (self.evaluator)(&self, p, c, s, new_value)
+    }
+
+    pub fn calc_value(&self, p: &Player, c: &StatCategory, s: &Stat) -> i8 {
+        (self.calc)(&self, p, c, s)
     }
 }
 

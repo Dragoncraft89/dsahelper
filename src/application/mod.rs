@@ -83,9 +83,11 @@ impl Application {
             for category in backend.character_sheet().categories() {
                 unsafe {
                     let widget = loader.load(File::static_cast_mut(&mut header) as *mut IODevice);
+                    let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
+                    let remaining = &mut *(find_child(widget, "remaining").unwrap() as *mut Label);
                     (*as_object(widget)).set_object_name(&qt_core::string::String::from(category.name.as_str()));
-                    (*(find_child(widget, "name").unwrap() as *mut Label)).set_text(&qt_core::string::String::from(format!("<b>{}</b>", category.name).as_str()));
-                    (*(find_child(widget, "remaining").unwrap() as *mut Label)).set_text(&qt_core::string::String::from(""));
+                    name.set_text(&qt_core::string::String::from(format!("<b>{}</b>", category.name).as_str()));
+                    remaining.set_text(&qt_core::string::String::from(""));
                     
                     layout.add_widget(widget);
                 }
@@ -95,20 +97,25 @@ impl Application {
                     let widget = match &stat.stat {
                         Stat::Attribute(name, short) => unsafe {
                             let widget = loader.load(File::static_cast_mut(&mut attribute) as *mut IODevice);
+                            let identifier = &mut *(find_child(widget, "identifier").unwrap() as *mut Label);
+                            let calculated = &mut *(find_child(widget, "calculated").unwrap() as *mut Label);
                             attribute.reset();
                             (*as_object(widget)).set_object_name(&qt_core::string::String::from(short.as_str()));
-                            (*(find_child(widget, "identifier").unwrap() as *mut Label)).set_text(&qt_core::string::String::from(format!("{} ({})", name, short).as_str()));
-                            (*(find_child(widget, "calculated").unwrap() as *mut Label)).set_text(&qt_core::string::String::from("0"));
+                            identifier.set_text(&qt_core::string::String::from(format!("{} ({})", name, short).as_str()));
+                            calculated.set_text(&qt_core::string::String::from("0"));
                             
                             widget
                         },
                         Stat::Ability(name, stats) => unsafe {
                             let widget = loader.load(File::static_cast_mut(&mut ability) as *mut IODevice);
+                            let identifier = &mut *(find_child(widget, "identifier").unwrap() as *mut Label);
+                            let stats_label = &mut *(find_child(widget, "stats").unwrap() as *mut Label);
+                            let calculated = &mut *(find_child(widget, "calculated").unwrap() as *mut Label);
                             ability.reset();
                             (*as_object(widget)).set_object_name(&qt_core::string::String::from(name.as_str()));
-                            (*(find_child(widget, "identifier").unwrap() as *mut Label)).set_text(&qt_core::string::String::from(name.as_str()));
-                            (*(find_child(widget, "stats").unwrap() as *mut Label)).set_text(&qt_core::string::String::from(stats.join(" ").as_str()));
-                            (*(find_child(widget, "calculated").unwrap() as *mut Label)).set_text(&qt_core::string::String::from("0"));
+                            identifier.set_text(&qt_core::string::String::from(name.as_str()));
+                            stats_label.set_text(&qt_core::string::String::from(stats.join(" ").as_str()));
+                            calculated.set_text(&qt_core::string::String::from("0"));
 
                             widget
                         }
@@ -118,7 +125,10 @@ impl Application {
                     unsafe {
                         (*(value as *mut SpinBox)).set_range(stat.min as i32, stat.max as i32);
                     }
-                    connect!(value, SIGNAL!("valueChanged(int)"), &mut *self, Application, Application::change_value, (category.name.clone(), stat.stat.clone(), value as *mut SpinBox), (String, Stat, *mut SpinBox));
+                    connect!(value, SIGNAL!("valueChanged(int)"), &mut *self, Application,
+                             Application::change_value,
+                             (category.name.clone(), stat.stat.clone(), value as *mut SpinBox),
+                             (String, Stat, *mut SpinBox));
 
                     unsafe {
                         layout.add_widget(widget);
@@ -147,8 +157,10 @@ impl Application {
                         Stat::Ability(name, _) => find_child_layout(layout, name.as_str()).unwrap()
                     } as *mut qt_widgets::widget::Widget;
 
+                    let calculated = sheet.calc_value(player, &category, &stat.stat);
                     let val = player.get_value(&stat.stat);
                     unsafe {
+                        (*(find_child(widget, "calculated").unwrap() as *mut Label)).set_text(&qt_core::string::String::number0(calculated as i32));
                         (*(find_child(widget, "value").unwrap() as *mut SpinBox)).set_value(val as i32);
                     }
                 }

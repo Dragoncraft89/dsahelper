@@ -92,6 +92,10 @@ impl PenAndPaperBackend for DSABackend {
                 }
             }
         }
+
+        fn calc(_sheet: &CharacterSheet, p: &Player, _c: &StatCategory, s: &Stat) -> i8 {
+            p.get_value(s)
+        }
         
         fn remaining_points_attributes(_sheet: &CharacterSheet, c: &StatCategory, p: &Player) -> i8 {
             c.stats.iter().fold(80, |x, s| {x - p.get_value(&s.stat)})
@@ -104,7 +108,7 @@ impl PenAndPaperBackend for DSABackend {
             sheet.categories().iter().filter(|c| {c.name != "Attribute"}).map(sum_category).fold(60, |x, n| { x - n})
         }
         
-        let mut sheet = CharacterSheet::new(eval);
+        let mut sheet = CharacterSheet::new(eval, calc);
         
         let mut attributes = StatCategory::new("Attribute".to_string(), remaining_points_attributes);
         attributes.add_stat(Stat::Attribute("Mut".to_string(), "MU".to_string()), 7, 13);
