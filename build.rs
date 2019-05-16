@@ -10,6 +10,6 @@ fn main() {
     for path in lib.include_paths {
         builder.include(path);
     }
-    
+
     builder.compile("signal");
 }

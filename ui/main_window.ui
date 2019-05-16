@@ -33,7 +33,7 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0,0,0,0">
         <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
@@ -51,9 +51,37 @@
          </spacer>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <widget class="QPushButton" name="set_date">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>25</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>FontAwesome</family>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string></string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1">
           <property name="sizeConstraint">
            <enum>QLayout::SetDefaultConstraint</enum>
+          </property>
+          <property name="topMargin">
+           <number>7</number>
           </property>
           <item>
            <widget class="QLabel" name="date">
@@ -75,7 +103,7 @@
              </font>
             </property>
             <property name="text">
-             <string>24.01.1021</string>
+             <string/>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -84,6 +112,12 @@
           </item>
           <item>
            <widget class="QLabel" name="time">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>60</width>
@@ -92,37 +126,115 @@
             </property>
             <property name="font">
              <font>
-              <pointsize>12</pointsize>
+              <pointsize>18</pointsize>
              </font>
             </property>
             <property name="text">
-             <string>15:71</string>
+             <string>00:00</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignHCenter|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <widget class="QPushButton" name="set_time">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QWidget" name="verticalWidget" native="true">
+          <layout class="QVBoxLayout" name="time_controls">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="min15">
+               <property name="text">
+                <string>+15min</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="min30">
+               <property name="text">
+                <string>+30min</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="hour1">
+               <property name="text">
+                <string>+1h</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QPushButton" name="day1">
+               <property name="text">
+                <string>+1d</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="week1">
+               <property name="text">
+                <string>+1w</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="month1">
+               <property name="text">
+                <string>+1mo</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QPushButton" name="next_day">
+            <property name="font">
+             <font>
+              <family>FontAwesome</family>
+             </font>
+            </property>
+            <property name="text">
+             <string></string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="next_evening">
+            <property name="font">
+             <font>
+              <family>FontAwesome</family>
+             </font>
+            </property>
+            <property name="text">
+             <string></string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
-          <property name="maximumSize">
+          <property name="sizeHint" stdset="0">
            <size>
-            <width>25</width>
-            <height>16777215</height>
+            <width>40</width>
+            <height>20</height>
            </size>
           </property>
-          <property name="text">
-           <string>🕒</string>
-          </property>
-         </widget>
+         </spacer>
         </item>
        </layout>
       </item>
@@ -226,7 +338,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>518</width>
-                 <height>292</height>
+                 <height>257</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -283,6 +395,8 @@
     <addaction name="new_file"/>
     <addaction name="save"/>
     <addaction name="open"/>
+    <addaction name="separator"/>
+    <addaction name="connect"/>
     <addaction name="separator"/>
     <addaction name="close"/>
    </widget>
@@ -342,6 +456,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="connect">
+   <property name="text">
+    <string>Verbinden</string>
    </property>
   </action>
  </widget>
