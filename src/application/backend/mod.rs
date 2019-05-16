@@ -111,7 +111,7 @@ impl CharacterSheet {
     }
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum TimeUnits {
     Minutes(i32),
     Hours(i32),

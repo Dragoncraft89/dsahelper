@@ -369,7 +369,7 @@ impl Application {
 
     pub fn add_time(&mut self, delta: &TimeUnits) {
         if let Some(backend) = &mut self.backend {
-            backend.calendar().advance_time(delta.clone());
+            backend.calendar().advance_time(*delta);
             self.update_time();
             self.update_date();
         }

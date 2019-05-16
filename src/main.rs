@@ -2,8 +2,8 @@
 extern crate lazy_static;
 extern crate qt_widgets;
 
-mod application;
 mod qt_bind;
+mod application;
 
 use qt_widgets::qt_core;
 
