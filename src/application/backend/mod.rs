@@ -2,8 +2,8 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Clone)]
 pub enum Stat {
-    Attribute(String, String),
-    Ability(String, Vec<String>),
+    Attribute(&'static str, &'static str),
+    Ability(&'static str, Vec<&'static str>),
 }
 
 impl Eq for Stat {}
@@ -27,41 +27,62 @@ impl Hash for Stat {
     }
 }
 
-pub struct RangedStat {
+pub struct StatDescription {
     pub stat: Stat,
     pub min: i8,
     pub max: i8,
 }
 
-pub struct StatCategory {
-    pub name: String,
-    pub stats: Vec<RangedStat>,
+pub trait ModifierValue {
+    fn name(&self) -> String;
+    fn get_modifier(&self, s: &Stat, val: i8) -> i8;
+}
 
-    eval: fn(&CharacterSheet, &StatCategory, &Player) -> i8,
+pub struct Modifier {
+    pub name: &'static str,
+    values: fn(&Player) -> Vec<Box<ModifierValue>>,
+}
+
+impl Modifier {
+    pub fn new(name: &'static str, values: fn(&Player) -> Vec<Box<ModifierValue>>) -> Modifier {
+        Modifier {
+            name: name,
+            values: values,
+        }
+    }
+    pub fn get_values(&self, p: &Player) -> Vec<Box<ModifierValue>> {
+        (self.values)(p)
+    }
+}
+
+pub enum CategoryEntry {
+    Stat(StatDescription),
+    Modifier(Modifier),
+}
+
+pub struct StatCategory {
+    pub name: &'static str,
+    pub entries: Vec<CategoryEntry>,
 }
 
 impl StatCategory {
-    pub fn new(
-        name: String,
-        eval: fn(&CharacterSheet, &StatCategory, &Player) -> i8,
-    ) -> StatCategory {
+    pub fn new(name: &'static str) -> StatCategory {
         StatCategory {
             name: name,
-            stats: Vec::new(),
-            eval: eval,
+            entries: Vec::new(),
         }
     }
 
     pub fn add_stat(&mut self, stat: Stat, min: i8, max: i8) {
-        self.stats.push(RangedStat {
+        self.entries.push(CategoryEntry::Stat(StatDescription {
             stat: stat,
             min: min,
             max: max,
-        });
+        }));
     }
 
-    pub fn get_remaining_points(&self, sheet: &CharacterSheet, p: &Player) -> i8 {
-        (self.eval)(sheet, self, p)
+    pub fn add_modifier(&mut self, modifier: Modifier) {
+        self.entries.push(CategoryEntry::Modifier(modifier));
     }
 }
 
@@ -100,6 +121,10 @@ impl CharacterSheet {
 
     pub fn categories(&self) -> &Vec<StatCategory> {
         &self.categories
+    }
+
+    pub fn categories_mut(&mut self) -> &mut Vec<StatCategory> {
+        &mut self.categories
     }
 
     pub fn validate_value(&self, p: &Player, c: &StatCategory, s: &Stat, new_value: i8) -> i8 {
@@ -149,6 +174,9 @@ pub trait Player {
 
     fn get_value(&self, s: &Stat) -> i8;
     fn set_value(&mut self, s: Stat, val: i8);
+
+    fn get_modifier(&self, s: &String) -> &ModifierValue;
+    fn set_modifier(&mut self, s: String, modifier: Box<ModifierValue>);
 }
 
 pub trait PenAndPaperBackend {

@@ -122,6 +122,7 @@ macro_rules! connect {
         }
 
         let data: &mut $call_type = $data;
+        #[allow(unused_unsafe)]
         unsafe {
             qt_bind::MANAGER.lock().unwrap().connect(
                 $sender,
@@ -145,6 +146,7 @@ macro_rules! connect {
         // if you mess the types up, you're gonna have a lot of pain
         let arg: $argtype = $argument;
         let data: &mut $call_type = $data;
+        #[allow(unused_unsafe)]
         unsafe {
             let ptr =
                 std::boxed::Box::into_raw(std::boxed::Box::new(arg)) as *mut std::os::raw::c_void;

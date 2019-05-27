@@ -9,7 +9,9 @@ use qt_core::variant::Variant;
 use qt_core::abstract_item_model::AbstractItemModel;
 use qt_core::string_list_model::StringListModel;
 
+use qt_widgets::combo_box::ComboBox;
 use qt_widgets::label::Label;
+use qt_widgets::layout::Layout;
 use qt_widgets::line_edit::EchoMode;
 use qt_widgets::list_view::ListView;
 use qt_widgets::push_button::PushButton;
@@ -72,75 +74,113 @@ impl Application {
                 child = layout.take_at(0);
             }
 
-            for category in backend.character_sheet().categories() {
+            let character_sheet = backend.character_sheet();
+
+            for category in character_sheet.categories() {
                 unsafe {
                     let widget = load("ui/character_sheet/header.ui");
                     let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
-                    let remaining = &mut *(find_child(widget, "remaining").unwrap() as *mut Label);
                     (*as_object(widget))
-                        .set_object_name(&qt_core::string::String::from(category.name.as_str()));
-                    name.set_text(&qt_core::string::String::from(category.name.as_str()));
-                    remaining.set_text(&qt_core::string::String::from(""));
+                        .set_object_name(&qt_core::string::String::from(category.name));
+                    name.set_text(&qt_core::string::String::from(category.name));
 
                     layout.add_widget(widget);
                 }
 
-                for stat in &category.stats {
-                    let widget = match &stat.stat {
-                        Stat::Attribute(name, short) => unsafe {
-                            let widget = load("ui/character_sheet/attribute.ui");
-                            let identifier =
-                                &mut *(find_child(widget, "identifier").unwrap() as *mut Label);
-                            let calculated =
-                                &mut *(find_child(widget, "calculated").unwrap() as *mut Label);
+                for entry in &category.entries {
+                    match entry {
+                        CategoryEntry::Modifier(modifier) => unsafe {
+                            let widget = load("ui/character_sheet/modifier.ui");
                             (*as_object(widget))
-                                .set_object_name(&qt_core::string::String::from(short.as_str()));
-                            identifier.set_text(&qt_core::string::String::from(
-                                format!("{} ({})", name, short).as_str(),
-                            ));
-                            calculated.set_text(&qt_core::string::String::from("0"));
+                                .set_object_name(&qt_core::string::String::from(modifier.name));
+                            let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
+                            let values =
+                                &mut *(find_child(widget, "values").unwrap() as *mut ComboBox);
 
-                            widget
+                            name.set_text(&qt_core::string::String::from(modifier.name));
+
+                            /*for modifier in &modifier.get_values() {
+                                values.add_item(&qt_core::string::String::from(
+                                    modifier.as_ref().name().as_str(),
+                                ));
+                            }*/
+
+                            connect!(
+                                as_object(values),
+                                SIGNAL!("currentIndexChanged(int)"),
+                                self,
+                                Application,
+                                Application::change_modifier,
+                                (modifier.name.to_string(), values),
+                                (String, *mut ComboBox)
+                            );
+
+                            layout.add_widget(widget);
                         },
-                        Stat::Ability(name, stats) => unsafe {
-                            let widget = load("ui/character_sheet/ability.ui");
-                            let identifier =
-                                &mut *(find_child(widget, "identifier").unwrap() as *mut Label);
-                            let stats_label =
-                                &mut *(find_child(widget, "stats").unwrap() as *mut Label);
-                            let calculated =
-                                &mut *(find_child(widget, "calculated").unwrap() as *mut Label);
-                            (*as_object(widget))
-                                .set_object_name(&qt_core::string::String::from(name.as_str()));
-                            identifier.set_text(&qt_core::string::String::from(name.as_str()));
-                            stats_label
-                                .set_text(&qt_core::string::String::from(stats.join(" ").as_str()));
-                            calculated.set_text(&qt_core::string::String::from("0"));
+                        CategoryEntry::Stat(stat) => {
+                            let widget = match &stat.stat {
+                                Stat::Attribute(name, short) => unsafe {
+                                    let widget = load("ui/character_sheet/attribute.ui");
+                                    let identifier = &mut *(find_child(widget, "identifier")
+                                        .unwrap()
+                                        as *mut Label);
+                                    let calculated = &mut *(find_child(widget, "calculated")
+                                        .unwrap()
+                                        as *mut Label);
+                                    (*as_object(widget))
+                                        .set_object_name(&qt_core::string::String::from(*short));
+                                    identifier.set_text(&qt_core::string::String::from(
+                                        format!("{} ({})", name, short).as_str(),
+                                    ));
+                                    calculated.set_text(&qt_core::string::String::from("0"));
 
-                            widget
-                        },
-                    };
+                                    widget
+                                },
+                                Stat::Ability(name, stats) => unsafe {
+                                    let widget = load("ui/character_sheet/ability.ui");
+                                    let identifier = &mut *(find_child(widget, "identifier")
+                                        .unwrap()
+                                        as *mut Label);
+                                    let stats_label =
+                                        &mut *(find_child(widget, "stats").unwrap() as *mut Label);
+                                    let calculated = &mut *(find_child(widget, "calculated")
+                                        .unwrap()
+                                        as *mut Label);
+                                    (*as_object(widget))
+                                        .set_object_name(&qt_core::string::String::from(*name));
+                                    identifier.set_text(&qt_core::string::String::from(*name));
+                                    stats_label.set_text(&qt_core::string::String::from(
+                                        stats.join(" ").as_str(),
+                                    ));
+                                    calculated.set_text(&qt_core::string::String::from("0"));
 
-                    let value = find_child(widget, "value").unwrap();
-                    unsafe {
-                        (*(value as *mut SpinBox)).set_range(stat.min as i32, stat.max as i32);
-                    }
-                    connect!(
-                        value,
-                        SIGNAL!("valueChanged(int)"),
-                        &mut *self,
-                        Application,
-                        Application::change_value,
-                        (
-                            category.name.clone(),
-                            stat.stat.clone(),
-                            value as *mut SpinBox
-                        ),
-                        (String, Stat, *mut SpinBox)
-                    );
+                                    widget
+                                },
+                            };
 
-                    unsafe {
-                        layout.add_widget(widget);
+                            let value = find_child(widget, "value").unwrap();
+                            unsafe {
+                                (*(value as *mut SpinBox))
+                                    .set_range(stat.min as i32, stat.max as i32);
+                                connect!(
+                                    value,
+                                    SIGNAL!("valueChanged(int)"),
+                                    &mut *self,
+                                    Application,
+                                    Application::change_value,
+                                    (
+                                        category.name.to_string(),
+                                        stat.stat.clone(),
+                                        value as *mut SpinBox
+                                    ),
+                                    (String, Stat, *mut SpinBox)
+                                );
+                            }
+
+                            unsafe {
+                                layout.add_widget(widget);
+                            }
+                        }
                     }
                 }
                 layout.add_spacing(25);
@@ -155,35 +195,97 @@ impl Application {
                 &mut *(find_child(self.main_window, "character_sheet").unwrap() as *mut VBoxLayout)
             };
             let sheet = backend.character_sheet();
+
             for category in sheet.categories() {
                 let player = backend.get_player(player_index);
-                let cat = find_child_layout(layout, category.name.as_str()).unwrap()
-                    as *mut qt_widgets::widget::Widget;
-                unsafe {
-                    let str = qt_core::string::String::number0(
-                        category.get_remaining_points(&sheet, player) as i32,
-                    );
-                    (*(find_child(cat, "remaining").unwrap() as *mut Label)).set_text(&str);
-                }
 
-                for stat in &category.stats {
-                    let widget = match &stat.stat {
-                        Stat::Attribute(_, short) => {
-                            find_child_layout(layout, short.as_str()).unwrap()
+                for entry in &category.entries {
+                    match entry {
+                        CategoryEntry::Modifier(modifier) => {
+                            let values = modifier.get_values(player);
+                            let index = match values.iter().position(|x| {
+                                x.as_ref().name()
+                                    == player.get_modifier(&modifier.name.to_string()).name()
+                            }) {
+                                Some(x) => x as i32,
+                                None => {
+                                    player.set_modifier(
+                                        modifier.name.to_string(),
+                                        modifier.get_values(player).swap_remove(0),
+                                    );
+                                    0
+                                }
+                            };
+
+                            unsafe {
+                                let entry = find_child_layout(layout, modifier.name).unwrap()
+                                    as *mut Layout;
+                                let combobox =
+                                    &mut (*(find_child(entry, "values").unwrap() as *mut ComboBox));
+                                (*as_object(combobox)).block_signals(true);
+                                while combobox.count() > 0 {
+                                    combobox.remove_item(0);
+                                }
+                                for value in values {
+                                    combobox.add_item(&qt_core::string::String::from(
+                                        value.name().as_str(),
+                                    ));
+                                }
+                                combobox.set_current_index(index);
+                                (*as_object(combobox)).block_signals(false);
+                            }
                         }
-                        Stat::Ability(name, _) => find_child_layout(layout, name.as_str()).unwrap(),
-                    } as *mut qt_widgets::widget::Widget;
-
-                    let calculated = sheet.calc_value(player, &category, &stat.stat);
-                    let val = player.get_value(&stat.stat);
-                    unsafe {
-                        (*(find_child(widget, "calculated").unwrap() as *mut Label))
-                            .set_text(&qt_core::string::String::number0(calculated as i32));
-                        (*(find_child(widget, "value").unwrap() as *mut SpinBox))
-                            .set_value(val as i32);
+                        CategoryEntry::Stat(stat) => {
+                            let widget = match &stat.stat {
+                                Stat::Attribute(_, short) => {
+                                    find_child_layout(layout, short).unwrap()
+                                }
+                                Stat::Ability(name, _) => find_child_layout(layout, name).unwrap(),
+                            } as *mut Layout;
+                            let calculated = sheet.calc_value(player, &category, &stat.stat);
+                            let val = player.get_value(&stat.stat);
+                            unsafe {
+                                (*(find_child(widget, "calculated").unwrap() as *mut Label))
+                                    .set_text(&qt_core::string::String::number0(calculated as i32));
+                                (*(find_child(widget, "value").unwrap() as *mut SpinBox))
+                                    .set_value(val as i32);
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    pub fn change_modifier(&mut self, (name, widget): &mut (String, *mut ComboBox)) {
+        if let (Some(backend), Some(player_index)) = (&mut self.backend, self.selected_player_index)
+        {
+            let mut sheet = backend.character_sheet();
+
+            let player = backend.get_player(player_index);
+
+            let index = unsafe { (**widget).current_index() as usize };
+            let value = match sheet
+                .categories_mut()
+                .iter_mut()
+                .map(|x| {
+                    x.entries.iter_mut().find(|y| {
+                        if let CategoryEntry::Modifier(m) = y {
+                            &m.name == name
+                        } else {
+                            false
+                        }
+                    })
+                })
+                .find(|x| x.is_some())
+                .unwrap()
+                .unwrap()
+            {
+                CategoryEntry::Modifier(modifier) => modifier.get_values(player).swap_remove(index),
+                _ => panic!("Application::change_value: Expected modifier as type"),
+            };
+            player.set_modifier(name.to_string(), value);
+            self.update_character_sheet();
         }
     }
 
@@ -217,8 +319,7 @@ impl Application {
         println!("New stub");
         self.backend = Some(Box::new(DSABackend::new()));
         unsafe {
-            (*(find_child(self.main_window, "centralwidget").unwrap()
-                as *mut qt_widgets::widget::Widget))
+            (*(find_child(self.main_window, "centralwidget").unwrap() as *mut Widget))
                 .set_enabled(true);
         }
 
@@ -253,8 +354,7 @@ impl Application {
         };
 
         unsafe {
-            (*(find_child(self.main_window, "player_data").unwrap()
-                as *mut qt_widgets::widget::Widget))
+            (*(find_child(self.main_window, "player_data").unwrap() as *mut Widget))
                 .set_enabled(selections.size() == 1);
         }
 
