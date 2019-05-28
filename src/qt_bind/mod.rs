@@ -245,3 +245,38 @@ pub fn load(s: &str) -> *mut Widget {
 
     obj
 }
+
+pub trait StringConversionHelper {
+    fn process(self) -> String;
+}
+
+impl StringConversionHelper for &std::string::String {
+    fn process(self) -> String {
+        String::from(self.as_str())
+    }
+}
+
+impl StringConversionHelper for std::string::String {
+    fn process(self) -> String {
+        String::from(self.as_str())
+    }
+}
+
+impl StringConversionHelper for &str {
+    fn process(self) -> String {
+        String::from(self)
+    }
+}
+
+impl StringConversionHelper for i32 {
+    fn process(self) -> String {
+        String::number0(self)
+    }
+}
+
+#[macro_export]
+macro_rules! qt_string {
+    ($s: expr) => {
+        qt_bind::StringConversionHelper::process($s)
+    };
+}

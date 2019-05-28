@@ -80,9 +80,8 @@ impl Application {
                 unsafe {
                     let widget = load("ui/character_sheet/header.ui");
                     let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
-                    (*as_object(widget))
-                        .set_object_name(&qt_core::string::String::from(category.name));
-                    name.set_text(&qt_core::string::String::from(category.name));
+                    (*as_object(widget)).set_object_name(&qt_string!(category.name));
+                    name.set_text(&qt_string!(category.name));
 
                     layout.add_widget(widget);
                 }
@@ -91,19 +90,12 @@ impl Application {
                     match entry {
                         CategoryEntry::Modifier(modifier) => unsafe {
                             let widget = load("ui/character_sheet/modifier.ui");
-                            (*as_object(widget))
-                                .set_object_name(&qt_core::string::String::from(modifier.name));
+                            (*as_object(widget)).set_object_name(&qt_string!(modifier.name));
                             let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
                             let values =
                                 &mut *(find_child(widget, "values").unwrap() as *mut ComboBox);
 
-                            name.set_text(&qt_core::string::String::from(modifier.name));
-
-                            /*for modifier in &modifier.get_values() {
-                                values.add_item(&qt_core::string::String::from(
-                                    modifier.as_ref().name().as_str(),
-                                ));
-                            }*/
+                            name.set_text(&qt_string!(modifier.name));
 
                             connect!(
                                 as_object(values),
@@ -127,12 +119,10 @@ impl Application {
                                     let calculated = &mut *(find_child(widget, "calculated")
                                         .unwrap()
                                         as *mut Label);
-                                    (*as_object(widget))
-                                        .set_object_name(&qt_core::string::String::from(*short));
-                                    identifier.set_text(&qt_core::string::String::from(
-                                        format!("{} ({})", name, short).as_str(),
-                                    ));
-                                    calculated.set_text(&qt_core::string::String::from("0"));
+                                    (*as_object(widget)).set_object_name(&qt_string!(*short));
+                                    identifier
+                                        .set_text(&qt_string!(format!("{} ({})", name, short)));
+                                    calculated.set_text(&qt_string!("0"));
 
                                     widget
                                 },
@@ -146,13 +136,10 @@ impl Application {
                                     let calculated = &mut *(find_child(widget, "calculated")
                                         .unwrap()
                                         as *mut Label);
-                                    (*as_object(widget))
-                                        .set_object_name(&qt_core::string::String::from(*name));
-                                    identifier.set_text(&qt_core::string::String::from(*name));
-                                    stats_label.set_text(&qt_core::string::String::from(
-                                        stats.join(" ").as_str(),
-                                    ));
-                                    calculated.set_text(&qt_core::string::String::from("0"));
+                                    (*as_object(widget)).set_object_name(&qt_string!(*name));
+                                    identifier.set_text(&qt_string!(*name));
+                                    stats_label.set_text(&qt_string!(stats.join(" ")));
+                                    calculated.set_text(&qt_string!("0"));
 
                                     widget
                                 },
@@ -227,9 +214,7 @@ impl Application {
                                     combobox.remove_item(0);
                                 }
                                 for value in values {
-                                    combobox.add_item(&qt_core::string::String::from(
-                                        value.name().as_str(),
-                                    ));
+                                    combobox.add_item(&qt_string!(value.name()));
                                 }
                                 combobox.set_current_index(index);
                                 (*as_object(combobox)).block_signals(false);
@@ -246,7 +231,7 @@ impl Application {
                             let val = player.get_value(&stat.stat);
                             unsafe {
                                 (*(find_child(widget, "calculated").unwrap() as *mut Label))
-                                    .set_text(&qt_core::string::String::number0(calculated as i32));
+                                    .set_text(&qt_string!(calculated as i32));
                                 (*(find_child(widget, "value").unwrap() as *mut SpinBox))
                                     .set_value(val as i32);
                             }
@@ -385,10 +370,7 @@ impl Application {
                 let row_count = model.row_count(());
                 model.insert_row(row_count);
                 let index = model.index(row_count);
-                model.set_data((
-                    &index,
-                    &Variant::new0(&qt_core::string::String::from(player.name().as_str())),
-                ));
+                model.set_data((&index, &Variant::new0(&qt_string!(player.name()))));
             }
         }
     }
@@ -419,10 +401,7 @@ impl Application {
                     let model = &mut (*self.player_list_model);
 
                     player.set_name(name.to_std_string());
-                    model.set_data((
-                        indexes.at(i),
-                        &Variant::new0(&qt_core::string::String::from(player.name().as_str())),
-                    ));
+                    model.set_data((indexes.at(i), &Variant::new0(&qt_string!(player.name()))));
                 }
             }
         }
@@ -447,9 +426,7 @@ impl Application {
 
             let (hour, minute) = backend.calendar().get_time();
             unsafe {
-                (*time_label).set_text(&qt_core::string::String::from(
-                    format!("{:02}:{:02}", hour, minute).as_str(),
-                ));
+                (*time_label).set_text(&qt_string!(format!("{:02}:{:02}", hour, minute)));
             }
         }
     }
@@ -460,9 +437,7 @@ impl Application {
 
             let (day, month, year) = backend.calendar().get_date();
             unsafe {
-                (*date_label).set_text(&qt_core::string::String::from(
-                    format!("{:02}.{:02}.{:04}", day, month, year).as_str(),
-                ));
+                (*date_label).set_text(&qt_string!(format!("{:02}.{:02}.{:04}", day, month, year)));
             }
         }
     }
@@ -486,10 +461,12 @@ impl Application {
             let (day, month, year) = cal.get_date();
 
             unsafe {
-                (*year_label).set_text(&qt_core::string::String::number0(year));
-                (*month_label).set_text(&qt_core::string::String::from(
-                    format!("{} ({})", cal.get_month_name(month), month).as_str(),
-                ));
+                (*year_label).set_text(&qt_string!(year));
+                (*month_label).set_text(&qt_string!(format!(
+                    "{} ({})",
+                    cal.get_month_name(month),
+                    month
+                )));
                 (*(find_child(dialog, format!("day{}", day).as_str()).unwrap() as *mut PushButton))
                     .set_checked(true);
             }
@@ -505,7 +482,7 @@ impl Application {
 
                     let year_label = find_child(*dialog, "year").unwrap() as *mut Label;
                     unsafe {
-                        (*year_label).set_text(&qt_core::string::String::number0(*year));
+                        (*year_label).set_text(&qt_string!(*year));
                     }
                 }
 
@@ -517,7 +494,7 @@ impl Application {
 
                     let year_label = find_child(*dialog, "year").unwrap() as *mut Label;
                     unsafe {
-                        (*year_label).set_text(&qt_core::string::String::number0(*year));
+                        (*year_label).set_text(&qt_string!(*year));
                     }
                 }
 
@@ -537,9 +514,11 @@ impl Application {
 
                     let month_label = find_child(*dialog, "month").unwrap() as *mut Label;
                     unsafe {
-                        (*month_label).set_text(&qt_core::string::String::from(
-                            format!("{} ({})", calendar.get_month_name(*month), month).as_str(),
-                        ));
+                        (*month_label).set_text(&qt_string!(format!(
+                            "{} ({})",
+                            calendar.get_month_name(*month),
+                            month
+                        )));
                     }
                 }
 
@@ -556,9 +535,11 @@ impl Application {
 
                     let month_label = find_child(*dialog, "month").unwrap() as *mut Label;
                     unsafe {
-                        (*month_label).set_text(&qt_core::string::String::from(
-                            format!("{} ({})", calendar.get_month_name(*month), month).as_str(),
-                        ));
+                        (*month_label).set_text(&qt_string!(format!(
+                            "{} ({})",
+                            calendar.get_month_name(*month),
+                            month
+                        )));
                     }
                 }
             }
