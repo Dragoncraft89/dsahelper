@@ -249,8 +249,6 @@ impl ModifierValue for Race {
                 Stat::Attribute(_, "G") => 8,
                 Stat::Attribute(_, "IN") => 1,
                 Stat::Attribute(_, "GE") => 1,
-                Stat::Attribute(_, "KL") => -1,
-                Stat::Attribute(_, "KK") => -1,
                 _ => 0,
             },
             Race::Halbelf => match s {
@@ -269,10 +267,48 @@ impl ModifierValue for Race {
                 Stat::Attribute(_, "G") => 6,
                 Stat::Attribute(_, "KO") => 1,
                 Stat::Attribute(_, "KK") => 1,
-                Stat::Attribute(_, "CH") => -1,
-                Stat::Attribute(_, "GE") => -1,
                 _ => 0,
             },
+        }
+    }
+}
+
+enum AttributeBonus {
+    MU(i8),
+    KL(i8),
+    IN(i8),
+    CH(i8),
+    FF(i8),
+    GE(i8),
+    KO(i8),
+    KK(i8),
+}
+
+impl ModifierValue for AttributeBonus {
+    fn name(&self) -> String {
+        match self {
+            AttributeBonus::MU(x) => format!("MU {}", x),
+            AttributeBonus::KL(x) => format!("KL {}", x),
+            AttributeBonus::IN(x) => format!("IN {}", x),
+            AttributeBonus::CH(x) => format!("CH {}", x),
+            AttributeBonus::FF(x) => format!("FF {}", x),
+            AttributeBonus::GE(x) => format!("GE {}", x),
+            AttributeBonus::KO(x) => format!("KO {}", x),
+            AttributeBonus::KK(x) => format!("KK {}", x),
+        }
+    }
+
+    fn get_modifier(&self, s: &Stat, _: i8) -> i8 {
+        match (self, s) {
+            (AttributeBonus::MU(x), Stat::Attribute(_, "MU")) => *x,
+            (AttributeBonus::KL(x), Stat::Attribute(_, "KL")) => *x,
+            (AttributeBonus::IN(x), Stat::Attribute(_, "IN")) => *x,
+            (AttributeBonus::CH(x), Stat::Attribute(_, "CH")) => *x,
+            (AttributeBonus::FF(x), Stat::Attribute(_, "FF")) => *x,
+            (AttributeBonus::GE(x), Stat::Attribute(_, "GE")) => *x,
+            (AttributeBonus::KO(x), Stat::Attribute(_, "KO")) => *x,
+            (AttributeBonus::KK(x), Stat::Attribute(_, "KK")) => *x,
+            _ => 0
         }
     }
 }
@@ -283,6 +319,7 @@ pub struct DSAPlayer {
     character_sheet: HashMap<Stat, i8>,
     race: Box<ModifierValue>,
     culture: Box<ModifierValue>,
+    bonus: Box<ModifierValue>
 }
 
 impl Player for DSAPlayer {
@@ -310,6 +347,7 @@ impl Player for DSAPlayer {
         match s.as_str() {
             "Rasse" => self.race.as_ref(),
             "Kultur" => self.culture.as_ref(),
+            "Eigenschaftsbonus" => self.bonus.as_ref(),
             _ => panic!("Invalid modifier category in DSA backend"),
         }
     }
@@ -318,6 +356,7 @@ impl Player for DSAPlayer {
         match s.as_str() {
             "Rasse" => self.race = modifier,
             "Kultur" => self.culture = modifier,
+            "Eigenschaftsbonus" => self.bonus = modifier,
             _ => panic!("Invalid modifier category in DSA backend"),
         }
     }
@@ -482,6 +521,7 @@ impl PenAndPaperBackend for DSABackend {
             character_sheet: map,
             race: Box::new(Race::Mensch),
             culture: Box::new(CultureMensch::Andergaster),
+            bonus: Box::new(AttributeBonus::MU(1))
         });
         self.players.last().unwrap()
     }
@@ -565,6 +605,7 @@ impl PenAndPaperBackend for DSABackend {
             let val = p.get_value(s);
             val + p.get_modifier(&"Rasse".to_string()).get_modifier(s, val)
                 + p.get_modifier(&"Kultur".to_string()).get_modifier(s, val)
+                + p.get_modifier(&"Eigenschaftsbonus".to_string()).get_modifier(s, val)
         }
 
         let mut sheet = CharacterSheet::new(eval, calc);
@@ -634,12 +675,46 @@ impl PenAndPaperBackend for DSABackend {
                     Box::new(CultureZwerg::Erzzwerge),
                     Box::new(CultureZwerg::Huegelzwerge),
                 ],
-                x => panic!("Unexpected modifier: {}", x),
+                x => panic!("Unexpected race modifier: {}", x),
+            }
+        });
+        let bonus = Modifier::new("Eigenschaftsbonus", |p| {
+            match p.get_modifier(&"Rasse".to_string()).name().as_str() {
+                "Mensch" => vec![
+                    Box::new(AttributeBonus::MU(1)),
+                    Box::new(AttributeBonus::KL(1)),
+                    Box::new(AttributeBonus::IN(1)),
+                    Box::new(AttributeBonus::CH(1)),
+                    Box::new(AttributeBonus::FF(1)),
+                    Box::new(AttributeBonus::GE(1)),
+                    Box::new(AttributeBonus::KO(1)),
+                    Box::new(AttributeBonus::KK(1)),
+                ],
+                "Halbelf" => vec![
+                    Box::new(AttributeBonus::MU(1)),
+                    Box::new(AttributeBonus::KL(1)),
+                    Box::new(AttributeBonus::IN(1)),
+                    Box::new(AttributeBonus::CH(1)),
+                    Box::new(AttributeBonus::FF(1)),
+                    Box::new(AttributeBonus::GE(1)),
+                    Box::new(AttributeBonus::KO(1)),
+                    Box::new(AttributeBonus::KK(1)),
+                ],
+                "Elf" => vec![
+                    Box::new(AttributeBonus::KL(-2)),
+                    Box::new(AttributeBonus::KK(-2)),
+                ],
+                "Zwerg" => vec![
+                    Box::new(AttributeBonus::CH(-2)),
+                    Box::new(AttributeBonus::GE(-2)),
+                ],
+                x => panic!("Unexpected race modifier: {}", x),
             }
         });
 
         character.add_modifier(races);
         character.add_modifier(cultures);
+        character.add_modifier(bonus);
         sheet.add_category(character);
 
         let mut attributes = StatCategory::new("Attribute");
