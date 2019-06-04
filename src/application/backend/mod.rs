@@ -93,9 +93,7 @@ pub struct CharacterSheet {
 }
 
 impl CharacterSheet {
-    pub fn new(
-        calc: fn(&CharacterSheet, &Player, &StatCategory, &Stat) -> i32,
-    ) -> CharacterSheet {
+    pub fn new(calc: fn(&CharacterSheet, &Player, &StatCategory, &Stat) -> i32) -> CharacterSheet {
         CharacterSheet {
             categories: Vec::new(),
             calc: calc,
@@ -104,6 +102,16 @@ impl CharacterSheet {
 
     pub fn add_category(&mut self, s: StatCategory) {
         self.categories.push(s);
+    }
+
+    pub fn get_category(&self, s: &str) -> Option<&StatCategory> {
+        for x in &self.categories {
+            if x.name == s {
+                return Some(x);
+            }
+        }
+
+        return None;
     }
 
     pub fn categories(&self) -> &Vec<StatCategory> {

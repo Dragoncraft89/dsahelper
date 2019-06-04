@@ -445,7 +445,8 @@ impl ModifierValue for Race {
             Race::Elf => "Elf (18 AP)",
             Race::Halbelf => "Halbelf (0 AP)",
             Race::Zwerg => "Zwerg (61 AP)",
-        }.to_string()
+        }
+        .to_string()
     }
 
     fn get_modifier(&self, s: &Stat, _: i32) -> i32 {
@@ -784,6 +785,32 @@ impl PenAndPaperBackend for DSABackend {
                         / 2
                 }
                 Stat::Attribute(_, "Schips") => val += 3,
+                Stat::Attribute(_, "AP") => {
+                    val -= sheet
+                        .get_category("Attribute")
+                        .unwrap()
+                        .entries
+                        .iter()
+                        .fold(0, |val, entry| match entry {
+                            CategoryEntry::Stat(stat) => {
+                                val + match p.get_value(&stat.stat) {
+                                    09 => 15,
+                                    10 => 2 * 15,
+                                    11 => 3 * 15,
+                                    12 => 4 * 15,
+                                    13 => 5 * 15,
+                                    14 => 6 * 15,
+                                    15 => 6 * 15 + 30,
+                                    16 => 6 * 15 + 45,
+                                    17 => 6 * 15 + 60,
+                                    18 => 6 * 15 + 75,
+                                    19 => 6 * 17 + 90,
+                                    _ => 0,
+                                }
+                            }
+                            _ => 0,
+                        })
+                }
                 _ => (),
             }
 
@@ -920,40 +947,39 @@ impl PenAndPaperBackend for DSABackend {
         attributes.add_stat(Stat::Attribute("Körperkraft", "KK"), 8, 19);
         sheet.add_category(attributes);
 
-        let mut weapons = StatCategory::new("Waffentalente");
-        weapons.add_stat(Stat::Ability("Dolche", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Fechtwaffen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Hiebwaffen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Säbel", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Schwerter", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Speere", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Stäbe", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Infanteriewaffen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Anderthalbhänder", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Kettenwaffen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Zweihand Hiebwaffen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Zweihand Säbel/Schwerter", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Raufen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Ringen", vec![]), -1, 20);
-        weapons.add_stat(Stat::Ability("Schilde", vec![]), -1, 20);
+        let mut weapons = StatCategory::new("Kampftechnik");
+        weapons.add_stat(Stat::Ability("Armbrüste", vec!["FF"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Bögen", vec!["FF"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Dolche", vec!["GE"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Fechtwaffen", vec!["GE"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Hiebwaffen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Kettenwaffen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Lanzen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Raufen", vec!["GE", "KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Schilde", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Schwerter", vec!["GE", "KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Stangenwaffen", vec!["GE", "KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Wurfwaffen", vec!["FF"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Zweihandhiebwaffen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Ability("Zweihandschwerter", vec!["KK"]), -1, 25);
         sheet.add_category(weapons);
 
         let mut physical = StatCategory::new("Körpertalente");
-        physical.add_stat(Stat::Ability("Schleichen", vec!["MU", "IN", "GE"]), -1, 20);
+        physical.add_stat(Stat::Ability("Schleichen", vec!["MU", "IN", "GE"]), -1, 25);
         physical.add_stat(
             Stat::Ability("Selbstbeherrschung", vec!["MU", "KO", "KK"]),
             -1,
-            20,
+            25,
         );
         physical.add_stat(
             Stat::Ability("Sinnesschärfe", vec!["KL", "IN", "GE"]),
             -1,
-            20,
+            25,
         );
         physical.add_stat(
             Stat::Ability("Taschendiebstahl", vec!["KL", "IN", "FF"]),
             -1,
-            20,
+            25,
         );
         physical.add_stat(Stat::Ability("Klettern", vec!["GE", "GE", "KK"]), -1, 20);
         physical.add_stat(Stat::Ability("Athletik", vec!["GE", "GE", "IN"]), -1, 20);
@@ -961,7 +987,7 @@ impl PenAndPaperBackend for DSABackend {
         physical.add_stat(
             Stat::Ability("(Ent-)Fesseln", vec!["GE", "KK", "FF"]),
             -1,
-            20,
+            25,
         );
         sheet.add_category(physical);
 
