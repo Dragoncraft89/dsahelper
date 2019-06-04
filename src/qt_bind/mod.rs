@@ -26,6 +26,12 @@ use qt_core::io_device::{IODevice, OpenModeFlag};
 
 use qt_ui_tools::ui_loader::UiLoader;
 
+use qt_core::list::ListModelIndex;
+use qt_core::model_index::ModelIndex;
+
+use qt_widgets::input_dialog::InputDialog;
+use qt_widgets::line_edit::EchoMode;
+
 extern "C" {
     fn create(
         obj: *mut c_void,
@@ -277,6 +283,48 @@ impl StringConversionHelper for i32 {
 #[macro_export]
 macro_rules! qt_string {
     ($s: expr) => {
-        qt_bind::StringConversionHelper::process($s)
+        crate::qt_bind::StringConversionHelper::process($s)
     };
+}
+
+pub struct ListModelIterator<'a> {
+    index: i32,
+    list: &'a ListModelIndex
+}
+
+impl<'a> Iterator for ListModelIterator<'a> {
+    type Item = &'a ModelIndex;
+    
+    fn next(&mut self) -> Option<&'a ModelIndex> {
+        self.index += 1;
+
+        if self.index <= self.list.size() {
+            return Some(self.list.at(self.index - 1));
+        }
+
+        None
+    }
+} 
+
+pub fn iter<'a>(list: &'a ListModelIndex) -> ListModelIterator<'a> {
+    ListModelIterator { index: 0, list: list }
+}
+
+pub fn input(window: *mut Widget, title: &str, label: &str, text: &str) -> Option<std::string::String> {
+    let mut ok = false;
+    let name = unsafe {
+        InputDialog::get_text((
+            window,
+            &qt_string!(title),
+            &qt_string!(label),
+            EchoMode::Normal,
+            &qt_string!(text),
+            &mut ok as *mut bool,
+        ))
+    };
+
+    match ok {
+        true => Some(name.to_std_string()),
+        false => None
+    }
 }

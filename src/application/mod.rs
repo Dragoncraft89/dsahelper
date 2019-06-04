@@ -1,7 +1,6 @@
 use qt_widgets::qt_core;
 
 use qt_widgets::cpp_utils::CppBox;
-use qt_widgets::cpp_utils::StaticCast;
 
 use qt_core::object::Object;
 use qt_core::variant::Variant;
@@ -12,7 +11,6 @@ use qt_core::string_list_model::StringListModel;
 use qt_widgets::combo_box::ComboBox;
 use qt_widgets::label::Label;
 use qt_widgets::layout::Layout;
-use qt_widgets::line_edit::EchoMode;
 use qt_widgets::list_view::ListView;
 use qt_widgets::push_button::PushButton;
 use qt_widgets::spin_box::SpinBox;
@@ -20,13 +18,11 @@ use qt_widgets::widget::Widget;
 
 use qt_widgets::v_box_layout::VBoxLayout;
 
-use qt_widgets::input_dialog::InputDialog;
-
 use qt_widgets::button_group::ButtonGroup;
 use qt_widgets::dialog::Dialog;
 
 use crate::qt_bind;
-use qt_bind::{as_object, delete, find_child, find_child_layout, load};
+use qt_bind::{as_object, delete, find_child, find_child_layout, iter, load, input};
 
 pub mod backend;
 mod dsa;
@@ -52,10 +48,8 @@ impl Application {
         };
 
         let listview = find_child(main_window, "players").unwrap() as *mut ListView;
+        let model = app.player_list_model.as_mut_ptr() as *mut AbstractItemModel;
         unsafe {
-            let boxed_model = Box::from_raw(app.player_list_model.as_mut_ptr());
-            let model =
-                StringListModel::static_cast_mut(Box::leak(boxed_model)) as *mut AbstractItemModel;
             (*listview).set_model(model);
         }
 
@@ -325,10 +319,7 @@ impl Application {
     ) {
         let selections = unsafe { (**model).selected_indexes() };
 
-        self.selected_player_index = match selections.size() {
-            0 => None,
-            _ => Some(selections.at(0).row() as usize),
-        };
+        self.selected_player_index = iter(&selections).next().map(|x| x.row() as usize);
 
         unsafe {
             (*(find_child(self.main_window, "player_data").unwrap() as *mut Widget))
@@ -340,29 +331,17 @@ impl Application {
 
     pub fn add_player(&mut self) {
         if let Some(var) = &mut self.backend {
-            let mut ok = false;
-            let name = unsafe {
-                let title = "Spieler erstellen".into();
-                let label = "Spielername eingeben".into();
-                let text = "".into();
-                InputDialog::get_text((
-                    self.main_window,
-                    &title,
-                    &label,
-                    EchoMode::Normal,
-                    &text,
-                    &mut ok as *mut bool,
-                ))
-            };
-
-            if ok {
-                let player = var.add_player(name.to_std_string());
-
-                let model = &mut (*self.player_list_model);
-                let row_count = model.row_count(());
-                model.insert_row(row_count);
-                let index = model.index(row_count);
-                model.set_data((&index, &Variant::new0(&qt_string!(player.name()))));
+            match input(self.main_window, "Spieler erstellen", "Spielername eingeben", "") {
+                Some(str) => {
+                    let player = var.add_player(str);
+                    
+                    let model = &mut self.player_list_model;
+                    let row_count = model.row_count(());
+                    model.insert_row(row_count);
+                    let index = model.index(row_count);
+                    model.set_data((&index, &Variant::new0(&qt_string!(player.name()))));
+                },
+                _ => ()
             }
         }
     }
@@ -371,29 +350,16 @@ impl Application {
         if let Some(var) = &mut self.backend {
             let listview = find_child(self.main_window, "players").unwrap() as *mut ListView;
             let indexes = unsafe { (*(*listview).selection_model()).selected_indexes() };
-            for i in 0..indexes.size() {
-                let pos = indexes.at(i).row() as usize;
-                let player = var.get_player(pos);
-                let mut ok = false;
-                let name = unsafe {
-                    let title = "Spieler bearbeiten".into();
-                    let label = "Spielername eingeben:".into();
-                    let text = (**player.name()).into();
-                    InputDialog::get_text((
-                        self.main_window,
-                        &title,
-                        &label,
-                        EchoMode::Normal,
-                        &text,
-                        &mut ok as *mut bool,
-                    ))
-                };
-
-                if ok {
-                    let model = &mut (*self.player_list_model);
-
-                    player.set_name(name.to_std_string());
-                    model.set_data((indexes.at(i), &Variant::new0(&qt_string!(player.name()))));
+            for val in iter(&indexes) {
+                let player = var.get_player(val.row() as usize);
+                match input(self.main_window, "Spieler bearbeiten", "Spielername eingeben:", player.name()) {
+                    Some(str) => {
+                        let model = &mut self.player_list_model;
+                        
+                        player.set_name(str);
+                        model.set_data((val, &Variant::new0(&qt_string!(player.name()))));
+                    },
+                    _ => ()
                 }
             }
         }
@@ -404,10 +370,10 @@ impl Application {
             let listview = find_child(self.main_window, "players").unwrap() as *mut ListView;
             let indexes = unsafe { (*(*listview).selection_model()).selected_indexes() };
 
-            for i in 0..indexes.size() {
-                var.remove_player(indexes.at(i).row() as usize);
+            for val in iter(&indexes) {
+                var.remove_player(val.row() as usize);
 
-                self.player_list_model.remove_rows((indexes.at(i).row(), 1));
+                self.player_list_model.remove_rows((val.row(), 1));
             }
         }
     }
