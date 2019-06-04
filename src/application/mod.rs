@@ -147,8 +147,7 @@ impl Application {
 
                             let value = find_child(widget, "value").unwrap();
                             unsafe {
-                                (*(value as *mut SpinBox))
-                                    .set_range(stat.min as i32, stat.max as i32);
+                                (*(value as *mut SpinBox)).set_range(stat.min, stat.max);
                                 connect!(
                                     value,
                                     SIGNAL!("valueChanged(int)"),
@@ -194,7 +193,7 @@ impl Application {
                                 x.as_ref().name()
                                     == player.get_modifier(&modifier.name.to_string()).name()
                             }) {
-                                Some(x) => x as i32,
+                                Some(x) => x,
                                 None => {
                                     player.set_modifier(
                                         modifier.name.to_string(),
@@ -216,7 +215,7 @@ impl Application {
                                 for value in values {
                                     combobox.add_item(&qt_string!(value.name()));
                                 }
-                                combobox.set_current_index(index);
+                                combobox.set_current_index(index as i32);
                                 (*as_object(combobox)).block_signals(false);
                             }
                         }
@@ -231,9 +230,9 @@ impl Application {
                             let val = player.get_value(&stat.stat);
                             unsafe {
                                 (*(find_child(widget, "calculated").unwrap() as *mut Label))
-                                    .set_text(&qt_string!(calculated as i32));
+                                    .set_text(&qt_string!(calculated));
                                 (*(find_child(widget, "value").unwrap() as *mut SpinBox))
-                                    .set_value(val as i32);
+                                    .set_value(val);
                             }
                         }
                     }
@@ -277,17 +276,10 @@ impl Application {
     pub fn change_value(&mut self, arg: &mut (String, Stat, *mut SpinBox)) {
         if let (Some(backend), Some(player_index)) = (&mut self.backend, self.selected_player_index)
         {
-            let sheet = backend.character_sheet();
-
             let player = backend.get_player(player_index);
             let value;
             unsafe {
-                value = sheet.validate_value(
-                    player,
-                    sheet.get_category(&arg.0).unwrap(),
-                    &arg.1,
-                    (*arg.2).value() as i8,
-                );
+                value = (*arg.2).value();
                 (*as_object(arg.2)).block_signals(true);
             }
 
@@ -476,7 +468,7 @@ impl Application {
             impl Callback {
                 pub fn prev_year(
                     &mut self,
-                    (_, year, dialog, _): &mut (i8, i32, *mut Dialog, &mut PenAndPaperCalendar),
+                    (_, year, dialog, _): &mut (i32, i32, *mut Dialog, &mut PenAndPaperCalendar),
                 ) {
                     *year -= 1;
 
@@ -488,7 +480,7 @@ impl Application {
 
                 pub fn next_year(
                     &mut self,
-                    (_, year, dialog, _): &mut (i8, i32, *mut Dialog, &mut PenAndPaperCalendar),
+                    (_, year, dialog, _): &mut (i32, i32, *mut Dialog, &mut PenAndPaperCalendar),
                 ) {
                     *year += 1;
 
@@ -501,7 +493,7 @@ impl Application {
                 pub fn prev_month(
                     &mut self,
                     (month, _, dialog, calendar): &mut (
-                        i8,
+                        i32,
                         i32,
                         *mut Dialog,
                         &mut PenAndPaperCalendar,
@@ -525,7 +517,7 @@ impl Application {
                 pub fn next_month(
                     &mut self,
                     (month, _, dialog, calendar): &mut (
-                        i8,
+                        i32,
                         i32,
                         *mut Dialog,
                         &mut PenAndPaperCalendar,
@@ -554,7 +546,7 @@ impl Application {
                 Callback,
                 Callback::prev_year,
                 &mut args,
-                &mut (i8, i32, *mut Dialog, &mut PenAndPaperCalendar)
+                &mut (i32, i32, *mut Dialog, &mut PenAndPaperCalendar)
             );
             connect!(
                 find_child(dialog, "next_year").unwrap(),
@@ -563,7 +555,7 @@ impl Application {
                 Callback,
                 Callback::next_year,
                 &mut args,
-                &mut (i8, i32, *mut Dialog, &mut PenAndPaperCalendar)
+                &mut (i32, i32, *mut Dialog, &mut PenAndPaperCalendar)
             );
 
             connect!(
@@ -573,7 +565,7 @@ impl Application {
                 Callback,
                 Callback::prev_month,
                 &mut args,
-                &mut (i8, i32, *mut Dialog, &mut PenAndPaperCalendar)
+                &mut (i32, i32, *mut Dialog, &mut PenAndPaperCalendar)
             );
             connect!(
                 find_child(dialog, "next_month").unwrap(),
@@ -582,13 +574,13 @@ impl Application {
                 Callback,
                 Callback::next_month,
                 &mut args,
-                &mut (i8, i32, *mut Dialog, &mut PenAndPaperCalendar)
+                &mut (i32, i32, *mut Dialog, &mut PenAndPaperCalendar)
             );
 
             let result = unsafe { (*dialog).exec() };
 
             let buttongroup = find_child(dialog, "buttonGroup").unwrap() as *mut ButtonGroup;
-            let day: i8 = unsafe {
+            let day: i32 = unsafe {
                 (*((*buttongroup).checked_button() as *mut Object))
                     .object_name()
                     .to_std_string()
@@ -621,10 +613,10 @@ impl Application {
             hour -= time.0;
             minute -= time.1;
 
-            let mut minutes = minute as i32 + hour as i32 * calendar.minutes_per_hour() as i32;
+            let mut minutes = minute + hour * calendar.minutes_per_hour();
 
             if minutes <= 0 {
-                minutes += calendar.hours_per_day() as i32 * calendar.minutes_per_hour() as i32;
+                minutes += calendar.hours_per_day() * calendar.minutes_per_hour();
             }
 
             calendar.advance_time(TimeUnits::Minutes(minutes));
@@ -641,10 +633,10 @@ impl Application {
             hour -= time.0;
             minute -= time.1;
 
-            let mut minutes = minute as i32 + hour as i32 * calendar.minutes_per_hour() as i32;
+            let mut minutes = minute + hour * calendar.minutes_per_hour();
 
             if minutes <= 0 {
-                minutes += calendar.hours_per_day() as i32 * calendar.minutes_per_hour() as i32;
+                minutes += calendar.hours_per_day() * calendar.minutes_per_hour();
             }
 
             calendar.advance_time(TimeUnits::Minutes(minutes));

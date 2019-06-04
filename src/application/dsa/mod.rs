@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use crate::application::backend::*;
 
 pub struct AventurienCalendar {
-    hour: i8,
-    minute: i8,
+    hour: i32,
+    minute: i32,
 
-    day: i8,
-    month: i8,
+    day: i32,
+    month: i32,
     year: i32,
 }
 
@@ -36,30 +36,247 @@ enum CultureMensch {
 impl ModifierValue for CultureMensch {
     fn name(&self) -> String {
         match self {
-            CultureMensch::Andergaster => "Andergaster",
-            CultureMensch::Aranier => "Aranier",
-            CultureMensch::Bornlaender => "Bornländer",
-            CultureMensch::Fjarninger => "Fjarninger",
-            CultureMensch::Horasier => "Horasier",
-            CultureMensch::Maraskaner => "Maraskaner",
-            CultureMensch::Mhanadistani => "Mhanadistani",
-            CultureMensch::Mittelreicher => "Mittelreicher",
-            CultureMensch::Mohas => "Moha",
-            CultureMensch::Nivesen => "Nivese",
-            CultureMensch::Norbarden => "Norbarde",
-            CultureMensch::Nordaventurier => "Nordaventurier",
-            CultureMensch::Nostrier => "Nostrier",
-            CultureMensch::Novadis => "Novadis",
-            CultureMensch::Suedaventurier => "Suedaventurier",
-            CultureMensch::Svelltaler => "Svelltaler",
-            CultureMensch::Thorwaller => "Thorwaller",
-            CultureMensch::Zyklopaeer => "Zyklopäer",
+            CultureMensch::Andergaster => "Andergaster (20 AP)",
+            CultureMensch::Aranier => "Aranier (26 AP)",
+            CultureMensch::Bornlaender => "Bornländer (18 AP)",
+            CultureMensch::Fjarninger => "Fjarninger (33 AP)",
+            CultureMensch::Horasier => "Horasier (27 AP)",
+            CultureMensch::Maraskaner => "Maraskaner (28 AP)",
+            CultureMensch::Mhanadistani => "Mhanadistani (26 AP)",
+            CultureMensch::Mittelreicher => "Mittelreicher (12 AP)",
+            CultureMensch::Mohas => "Moha (38 AP)",
+            CultureMensch::Nivesen => "Nivese (37 AP)",
+            CultureMensch::Norbarden => "Norbarde (18 AP)",
+            CultureMensch::Nordaventurier => "Nordaventurier (25 AP)",
+            CultureMensch::Nostrier => "Nostrier (15 AP)",
+            CultureMensch::Novadis => "Novadis (25 AP)",
+            CultureMensch::Suedaventurier => "Suedaventurier (26 AP)",
+            CultureMensch::Svelltaler => "Svelltaler (21 AP)",
+            CultureMensch::Thorwaller => "Thorwaller (24 AP)",
+            CultureMensch::Zyklopaeer => "Zyklopäer (16 AP)",
         }
         .to_string()
     }
 
-    fn get_modifier(&self, s: &Stat, _: i8) -> i8 {
-        0
+    fn get_modifier(&self, s: &Stat, _: i32) -> i32 {
+        match self {
+            CultureMensch::Andergaster => match s {
+                Stat::Ability("Holzbearbeitung", _) => 2,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Tierkunde", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 2,
+
+                Stat::Attribute(_, "AP") => -20,
+                _ => 0,
+            },
+            CultureMensch::Aranier => match s {
+                Stat::Ability("Betören", _) => 1,
+                Stat::Ability("Brett- & Glückspiel", _) => 1,
+                Stat::Ability("Gassenwissen", _) => 2,
+                Stat::Ability("Handel", _) => 2,
+                Stat::Ability("Menschenkenntnis", _) => 1,
+                Stat::Ability("Rechnen", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Stoffbearbeitung", _) => 1,
+                Stat::Ability("Überreden", _) => 2,
+                Stat::Attribute(_, "AP") => -26,
+                _ => 0,
+            },
+            CultureMensch::Bornlaender => match s {
+                Stat::Ability("Fährtensuche", _) => 1,
+                Stat::Ability("Holzbearbeitung", _) => 2,
+                Stat::Ability("Lebensmittelbearbeitung", _) => 1,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 1,
+                Stat::Ability("Zechen", _) => 2,
+                Stat::Attribute(_, "AP") => -18,
+                _ => 0,
+            },
+            CultureMensch::Fjarninger => match s {
+                Stat::Ability("Einschüchtern", _) => 2,
+                Stat::Ability("Fährtensuche", _) => 1,
+                Stat::Ability("Körperbeherrschung", _) => 1,
+                Stat::Ability("Kraftakt", _) => 2,
+                Stat::Ability("Metallbearbeitung", _) => 1,
+                Stat::Ability("Orientierung", _) => 2,
+                Stat::Ability("Selbstbeherrschung", _) => 1,
+                Stat::Ability("Steinbearbeitung", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 2,
+                Stat::Attribute(_, "AP") => -33,
+                _ => 0,
+            },
+            CultureMensch::Horasier => match s {
+                Stat::Ability("Betören", _) => 1,
+                Stat::Ability("Boote & Schiffe", _) => 1,
+                Stat::Ability("Etikette", _) => 2,
+                Stat::Ability("Gassenwissen", _) => 2,
+                Stat::Ability("Geographie", _) => 1,
+                Stat::Ability("Geschichtswissen", _) => 1,
+                Stat::Ability("Handel", _) => 1,
+                Stat::Ability("Mechanik", _) => 1,
+                Stat::Ability("Rechnen", _) => 2,
+                Stat::Ability("Rechtskunde", _) => 2,
+                Stat::Ability("Tanzen", _) => 1,
+                Stat::Attribute(_, "AP") => -27,
+                _ => 0,
+            },
+            CultureMensch::Maraskaner => match s {
+                Stat::Ability("Götter & Kulte", _) => 1,
+                Stat::Ability("Heilkunde Gift", _) => 2,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 2,
+                Stat::Ability("Tierkunde", _) => 2,
+                Stat::Ability("Verbergen", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 1,
+                Stat::Attribute(_, "AP") => -26,
+                _ => 0,
+            },
+            CultureMensch::Mhanadistani => match s {
+                Stat::Ability("Brett- & Glückspiel", _) => 2,
+                Stat::Ability("Gassenwissen", _) => 2,
+                Stat::Ability("Geschichtswissen", _) => 2,
+                Stat::Ability("Götter & Kulte", _) => 2,
+                Stat::Ability("Handel", _) => 2,
+                Stat::Ability("Magiekunde", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 2,
+                Stat::Ability("Überreden", _) => 1,
+                Stat::Attribute(_, "AP") => -28,
+                _ => 0,
+            },
+            CultureMensch::Mittelreicher => match s {
+                Stat::Ability("Holzbearbeitung", _) => 1,
+                Stat::Ability("Metallbearbeitung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Stoffbearbeitung", _) => 1,
+                Stat::Ability("Tierkunde", _) => 1,
+                Stat::Attribute(_, "AP") => -12,
+                _ => 0,
+            },
+            CultureMensch::Mohas => match s {
+                Stat::Ability("Fährtensuche", _) => 1,
+                Stat::Ability("Heilkunde Gift", _) => 1,
+                Stat::Ability("Körperbeherrschung", _) => 1,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 2,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Sinnesschärfe", _) => 1,
+                Stat::Ability("Tierkunde", _) => 2,
+                Stat::Ability("Verbergen", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 2,
+                Stat::Attribute(_, "AP") => -38,
+                _ => 0,
+            },
+            CultureMensch::Nivesen => match s {
+                Stat::Ability("Fährtensuche", _) => 2,
+                Stat::Ability("Fahrzeuge", _) => 1,
+                Stat::Ability("Orientierung", _) => 2,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 2,
+                Stat::Ability("Sinnesschärfe", _) => 1,
+                Stat::Ability("Tierkunde", _) => 2,
+                Stat::Ability("Verbergen", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 2,
+                Stat::Attribute(_, "AP") => -37,
+                _ => 0,
+            },
+            CultureMensch::Norbarden => match s {
+                Stat::Ability("Fahrzeuge", _) => 2,
+                Stat::Ability("Geographie", _) => 2,
+                Stat::Ability("Handel", _) => 2,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Überreden", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 1,
+                Stat::Attribute(_, "AP") => -18,
+                _ => 0,
+            },
+            CultureMensch::Nordaventurier => match s {
+                Stat::Ability("Fährtensuche", _) => 2,
+                Stat::Ability("Handel", _) => 1,
+                Stat::Ability("Holzbearbeitung", _) => 1,
+                Stat::Ability("Lederbearbeitung", _) => 1,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Selbstbeherrschung", _) => 1,
+                Stat::Ability("Tierkunde", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 1,
+                Stat::Ability("Zechen", _) => 1,
+                Stat::Attribute(_, "AP") => -25,
+                _ => 0,
+            },
+            CultureMensch::Nostrier => match s {
+                Stat::Ability("Fischen & Angeln", _) => 2,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Tierkunde", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 1,
+                Stat::Attribute(_, "AP") => -15,
+                _ => 0,
+            },
+            CultureMensch::Novadis => match s {
+                Stat::Ability("Einschüchtern", _) => 2,
+                Stat::Ability("Fährtensuche", _) => 1,
+                Stat::Ability("Orientierung", _) => 2,
+                Stat::Ability("Rechtskunde", _) => 1,
+                Stat::Ability("Reiten", _) => 2,
+                Stat::Ability("Tierkunde", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 2,
+                Stat::Attribute(_, "AP") => -25,
+                _ => 0,
+            },
+            CultureMensch::Suedaventurier => match s {
+                Stat::Ability("Betören", _) => 1,
+                Stat::Ability("Boote & Schiffe", _) => 1,
+                Stat::Ability("Fischen & Angeln", _) => 1,
+                Stat::Ability("Gassenwissen", _) => 2,
+                Stat::Ability("Heilkunde Gift", _) => 1,
+                Stat::Ability("Menschenkenntnis", _) => 2,
+                Stat::Ability("Überreden", _) => 1,
+                Stat::Ability("Willenskraft", _) => 1,
+                Stat::Attribute(_, "AP") => -26,
+                _ => 0,
+            },
+            CultureMensch::Svelltaler => match s {
+                Stat::Ability("Fährtensuche", _) => 2,
+                Stat::Ability("Fahrzeuge", _) => 2,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Pflanzenkunde", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Tierkunde", _) => 1,
+                Stat::Ability("Wildnisleben", _) => 1,
+                Stat::Attribute(_, "AP") => -21,
+                _ => 0,
+            },
+            CultureMensch::Thorwaller => match s {
+                Stat::Ability("Boote & Schiffe", _) => 1,
+                Stat::Ability("Einschüchtern", _) => 1,
+                Stat::Ability("Fischen & Angeln", _) => 2,
+                Stat::Ability("Geographie", _) => 1,
+                Stat::Ability("Holzbearbeitung", _) => 2,
+                Stat::Ability("Kraftakt", _) => 2,
+                Stat::Ability("Orientierung", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Zechen", _) => 2,
+                Stat::Attribute(_, "AP") => -24,
+                _ => 0,
+            },
+            CultureMensch::Zyklopaeer => match s {
+                Stat::Ability("Boote & Schiffe", _) => 1,
+                Stat::Ability("Fischen & Angeln", _) => 2,
+                Stat::Ability("Geschichtswissen", _) => 1,
+                Stat::Ability("Götter & Kulte", _) => 2,
+                Stat::Ability("Musizieren", _) => 1,
+                Stat::Ability("Rechnen", _) => 1,
+                Stat::Ability("Rechtskunde", _) => 1,
+                Stat::Ability("Sagen & Legenden", _) => 1,
+                Stat::Ability("Tanzen", _) => 1,
+                Stat::Attribute(_, "AP") => -16,
+                _ => 0,
+            },
+        }
     }
 }
 
@@ -72,14 +289,14 @@ enum CultureElf {
 impl ModifierValue for CultureElf {
     fn name(&self) -> String {
         match self {
-            CultureElf::Auelfen => "Auelf",
-            CultureElf::Firnelfen => "Firnelf",
-            CultureElf::Waldelfen => "Waldelf",
+            CultureElf::Auelfen => "Auelf (43 AP)",
+            CultureElf::Firnelfen => "Firnelf (55 AP)",
+            CultureElf::Waldelfen => "Waldelf (47 AP)",
         }
         .to_string()
     }
 
-    fn get_modifier(&self, s: &Stat, _: i8) -> i8 {
+    fn get_modifier(&self, s: &Stat, _: i32) -> i32 {
         match self {
             CultureElf::Auelfen => match s {
                 Stat::Ability("Betören", _) => 1,
@@ -144,15 +361,15 @@ enum CultureZwerg {
 impl ModifierValue for CultureZwerg {
     fn name(&self) -> String {
         match self {
-            CultureZwerg::Ambosszwerge => "Ambosszwerg",
-            CultureZwerg::Brillantzwerge => "Brillantzwerg",
-            CultureZwerg::Erzzwerge => "Erzzwerg",
-            CultureZwerg::Huegelzwerge => "Hügelzwerg",
+            CultureZwerg::Ambosszwerge => "Ambosszwerg (31 AP)",
+            CultureZwerg::Brillantzwerge => "Brillantzwerg (29 AP)",
+            CultureZwerg::Erzzwerge => "Erzzwerg (34 AP)",
+            CultureZwerg::Huegelzwerge => "Hügelzwerg (13 AP)",
         }
         .to_string()
     }
 
-    fn get_modifier(&self, s: &Stat, _: i8) -> i8 {
+    fn get_modifier(&self, s: &Stat, _: i32) -> i32 {
         match self {
             CultureZwerg::Ambosszwerge => match s {
                 Stat::Ability("Einschüchtern", _) => 1,
@@ -224,14 +441,14 @@ enum Race {
 impl ModifierValue for Race {
     fn name(&self) -> String {
         match self {
-            Race::Mensch => "Mensch".to_string(),
-            Race::Elf => "Elf".to_string(),
-            Race::Halbelf => "Halbelf".to_string(),
-            Race::Zwerg => "Zwerg".to_string(),
-        }
+            Race::Mensch => "Mensch (0 AP)",
+            Race::Elf => "Elf (18 AP)",
+            Race::Halbelf => "Halbelf (0 AP)",
+            Race::Zwerg => "Zwerg (61 AP)",
+        }.to_string()
     }
 
-    fn get_modifier(&self, s: &Stat, _: i8) -> i8 {
+    fn get_modifier(&self, s: &Stat, _: i32) -> i32 {
         match self {
             Race::Mensch => match s {
                 Stat::Attribute(_, "AP") => 0,
@@ -274,14 +491,14 @@ impl ModifierValue for Race {
 }
 
 enum AttributeBonus {
-    MU(i8),
-    KL(i8),
-    IN(i8),
-    CH(i8),
-    FF(i8),
-    GE(i8),
-    KO(i8),
-    KK(i8),
+    MU(i32),
+    KL(i32),
+    IN(i32),
+    CH(i32),
+    FF(i32),
+    GE(i32),
+    KO(i32),
+    KK(i32),
 }
 
 impl ModifierValue for AttributeBonus {
@@ -298,7 +515,7 @@ impl ModifierValue for AttributeBonus {
         }
     }
 
-    fn get_modifier(&self, s: &Stat, _: i8) -> i8 {
+    fn get_modifier(&self, s: &Stat, _: i32) -> i32 {
         match (self, s) {
             (AttributeBonus::MU(x), Stat::Attribute(_, "MU")) => *x,
             (AttributeBonus::KL(x), Stat::Attribute(_, "KL")) => *x,
@@ -308,7 +525,7 @@ impl ModifierValue for AttributeBonus {
             (AttributeBonus::GE(x), Stat::Attribute(_, "GE")) => *x,
             (AttributeBonus::KO(x), Stat::Attribute(_, "KO")) => *x,
             (AttributeBonus::KK(x), Stat::Attribute(_, "KK")) => *x,
-            _ => 0
+            _ => 0,
         }
     }
 }
@@ -316,10 +533,10 @@ impl ModifierValue for AttributeBonus {
 pub struct DSAPlayer {
     _name: String,
 
-    character_sheet: HashMap<Stat, i8>,
+    character_sheet: HashMap<Stat, i32>,
     race: Box<ModifierValue>,
     culture: Box<ModifierValue>,
-    bonus: Box<ModifierValue>
+    bonus: Box<ModifierValue>,
 }
 
 impl Player for DSAPlayer {
@@ -331,7 +548,7 @@ impl Player for DSAPlayer {
         self._name = name
     }
 
-    fn get_value(&self, s: &Stat) -> i8 {
+    fn get_value(&self, s: &Stat) -> i32 {
         if self.character_sheet.contains_key(s) {
             self.character_sheet[s]
         } else {
@@ -339,7 +556,7 @@ impl Player for DSAPlayer {
         }
     }
 
-    fn set_value(&mut self, s: Stat, val: i8) {
+    fn set_value(&mut self, s: Stat, val: i32) {
         self.character_sheet.insert(s, val);
     }
 
@@ -363,20 +580,20 @@ impl Player for DSAPlayer {
 }
 
 impl PenAndPaperCalendar for AventurienCalendar {
-    fn get_time(&self) -> (i8, i8) {
+    fn get_time(&self) -> (i32, i32) {
         (self.hour, self.minute)
     }
 
-    fn set_time(&mut self, hour: i8, minute: i8) {
+    fn set_time(&mut self, hour: i32, minute: i32) {
         self.hour = min(max(hour, 0), 23);
         self.minute = min(max(minute, 0), 59);
     }
 
-    fn get_date(&self) -> (i8, i8, i32) {
+    fn get_date(&self) -> (i32, i32, i32) {
         (self.day, self.month, self.year)
     }
 
-    fn set_date(&mut self, day: i8, month: i8, year: i32) {
+    fn set_date(&mut self, day: i32, month: i32, year: i32) {
         self.day = min(max(day, 1), 30);
         self.month = min(max(month, 1), 12);
         self.year = year;
@@ -385,9 +602,9 @@ impl PenAndPaperCalendar for AventurienCalendar {
     fn advance_time(&mut self, t: TimeUnits) {
         match t {
             TimeUnits::Minutes(m) => {
-                let minutes = self.minute as i32 + m;
+                let minutes = self.minute + m;
                 let mut hours = minutes / 60;
-                self.minute = (minutes % 60) as i8;
+                self.minute = minutes % 60;
                 if self.minute < 0 {
                     hours -= 1;
                     self.minute += 60;
@@ -395,9 +612,9 @@ impl PenAndPaperCalendar for AventurienCalendar {
                 self.advance_time(TimeUnits::Hours(hours));
             }
             TimeUnits::Hours(h) => {
-                let hours = self.hour as i32 + h;
+                let hours = self.hour + h;
                 let mut days = hours / 24;
-                self.hour = (hours % 24) as i8;
+                self.hour = hours % 24;
                 if self.hour < 0 {
                     days -= 1;
                     self.hour += 24;
@@ -405,9 +622,9 @@ impl PenAndPaperCalendar for AventurienCalendar {
                 self.advance_time(TimeUnits::Days(days));
             }
             TimeUnits::Days(d) => {
-                let days = self.day as i32 + d;
+                let days = self.day + d;
                 let mut months = (days - 1) / 30;
-                self.day = ((days - 1) % 30 + 1) as i8;
+                self.day = (days - 1) % 30 + 1;
 
                 if self.day < 1 {
                     months -= 1;
@@ -419,9 +636,9 @@ impl PenAndPaperCalendar for AventurienCalendar {
                 self.advance_time(TimeUnits::Days(7 * w));
             }
             TimeUnits::Months(m) => {
-                let months = self.month as i32 + m;
+                let months = self.month + m;
                 let mut years = (months - 1) / 12;
-                self.month = ((months - 1) % 12 + 1) as i8;
+                self.month = (months - 1) % 12 + 1;
 
                 if self.month < 1 {
                     years -= 1;
@@ -435,7 +652,7 @@ impl PenAndPaperCalendar for AventurienCalendar {
         }
     }
 
-    fn get_month_name(&self, month: i8) -> &'static str {
+    fn get_month_name(&self, month: i32) -> &'static str {
         match month {
             1 => "Praios",
             2 => "Rondra",
@@ -453,29 +670,29 @@ impl PenAndPaperCalendar for AventurienCalendar {
         }
     }
 
-    fn minutes_per_hour(&mut self) -> i8 {
+    fn minutes_per_hour(&mut self) -> i32 {
         60
     }
-    fn hours_per_day(&mut self) -> i8 {
+    fn hours_per_day(&mut self) -> i32 {
         24
     }
-    fn days_per_week(&mut self) -> i8 {
+    fn days_per_week(&mut self) -> i32 {
         7
     }
-    fn days_per_month(&mut self, _: i8) -> i8 {
+    fn days_per_month(&mut self, _: i32) -> i32 {
         30
     }
-    fn months_per_year(&mut self) -> i8 {
+    fn months_per_year(&mut self) -> i32 {
         12
     }
 
-    fn morning(&self) -> (i8, i8) {
+    fn morning(&self) -> (i32, i32) {
         (08, 00)
     }
-    fn noon(&self) -> (i8, i8) {
+    fn noon(&self) -> (i32, i32) {
         (12, 00)
     }
-    fn evening(&self) -> (i8, i8) {
+    fn evening(&self) -> (i32, i32) {
         (18, 00)
     }
 }
@@ -521,7 +738,7 @@ impl PenAndPaperBackend for DSABackend {
             character_sheet: map,
             race: Box::new(Race::Mensch),
             culture: Box::new(CultureMensch::Andergaster),
-            bonus: Box::new(AttributeBonus::MU(1))
+            bonus: Box::new(AttributeBonus::MU(1)),
         });
         self.players.last().unwrap()
     }
@@ -535,80 +752,45 @@ impl PenAndPaperBackend for DSABackend {
     }
 
     fn character_sheet(&mut self) -> CharacterSheet {
-        fn eval(
-            sheet: &CharacterSheet,
-            p: &Player,
-            _c: &StatCategory,
-            s: &Stat,
-            new_val: i8,
-        ) -> i8 {
-            match s {
-                Stat::Attribute(_, _) => {
-                    let category = sheet.get_category(&"Attribute".to_string()).unwrap();
-                    new_val
-                        + min(
-                            0,
-                            category
-                                .entries
-                                .iter()
-                                .filter(|x| {
-                                    if let CategoryEntry::Stat(x) = x {
-                                        x.stat != *s
-                                    } else {
-                                        false
-                                    }
-                                })
-                                .fold(80 - new_val, |x, s| {
-                                    x - if let CategoryEntry::Stat(s) = s {
-                                        p.get_value(&s.stat)
-                                    } else {
-                                        0
-                                    }
-                                }),
-                        )
-                }
-                Stat::Ability(_, _) => {
-                    let fold_categories = |x, c: &StatCategory| {
-                        x - c
-                            .entries
-                            .iter()
-                            .filter(|x| {
-                                if let CategoryEntry::Stat(x) = x {
-                                    x.stat != *s
-                                } else {
-                                    false
-                                }
-                            })
-                            .fold(0, |x, s| {
-                                x + if let CategoryEntry::Stat(s) = s {
-                                    p.get_value(&s.stat)
-                                } else {
-                                    0
-                                }
-                            })
-                    };
-
-                    new_val
-                        - min(
-                            0,
-                            sheet
-                                .categories()
-                                .iter()
-                                .filter(|c| c.name != "Attribute")
-                                .fold(60 - new_val, fold_categories),
-                        )
-                }
-            }
-        }
-
-        fn calc(_sheet: &CharacterSheet, p: &Player, _c: &StatCategory, s: &Stat) -> i8 {
-            let val = p.get_value(s);
-            val + p.get_modifier(&"Rasse".to_string()).get_modifier(s, val)
+        fn calc(sheet: &CharacterSheet, p: &Player, c: &StatCategory, s: &Stat) -> i32 {
+            let mut val = p.get_value(s);
+            val = val
+                + p.get_modifier(&"Rasse".to_string()).get_modifier(s, val)
                 + p.get_modifier(&"Kultur".to_string()).get_modifier(s, val)
-                + p.get_modifier(&"Eigenschaftsbonus".to_string()).get_modifier(s, val)
+                + p.get_modifier(&"Eigenschaftsbonus".to_string())
+                    .get_modifier(s, val);
+
+            match s {
+                Stat::Attribute(_, "LeP") => {
+                    val += calc(sheet, p, c, &Stat::Attribute("Konstitution", "KO")) * 2
+                }
+                Stat::Attribute(_, "SK") => {
+                    val += (calc(sheet, p, c, &Stat::Attribute("Mut", "MU"))
+                        + calc(sheet, p, c, &Stat::Attribute("Klugheit", "KL"))
+                        + calc(sheet, p, c, &Stat::Attribute("Intuition", "IN")))
+                        / 6
+                }
+                Stat::Attribute(_, "ZK") => {
+                    val += (calc(sheet, p, c, &Stat::Attribute("Konstitution", "KO")) * 2
+                        + calc(sheet, p, c, &Stat::Attribute("Körperkraft", "KK")))
+                        / 6
+                }
+                Stat::Attribute(_, "AW") => {
+                    val += calc(sheet, p, c, &Stat::Attribute("Gewandtheit", "GE")) / 2
+                }
+                Stat::Attribute(_, "INI") => {
+                    val += (calc(sheet, p, c, &Stat::Attribute("Mut", "MU"))
+                        + calc(sheet, p, c, &Stat::Attribute("Gewandtheit", "GE")))
+                        / 2
+                }
+                Stat::Attribute(_, "Schips") => val += 3,
+                _ => (),
+            }
+
+            val
         }
 
-        let mut sheet = CharacterSheet::new(eval, calc);
+        let mut sheet = CharacterSheet::new(calc);
 
         let mut character = StatCategory::new("Charakter");
         let races = Modifier::new("Rasse", |_| {
@@ -621,7 +803,7 @@ impl PenAndPaperBackend for DSABackend {
         });
         let cultures = Modifier::new("Kultur", |p| {
             match p.get_modifier(&"Rasse".to_string()).name().as_str() {
-                "Mensch" => vec![
+                "Mensch (0 AP)" => vec![
                     Box::new(CultureMensch::Andergaster),
                     Box::new(CultureMensch::Aranier),
                     Box::new(CultureMensch::Bornlaender),
@@ -641,7 +823,7 @@ impl PenAndPaperBackend for DSABackend {
                     Box::new(CultureMensch::Thorwaller),
                     Box::new(CultureMensch::Zyklopaeer),
                 ],
-                "Halbelf" => vec![
+                "Halbelf (0 AP)" => vec![
                     Box::new(CultureMensch::Andergaster),
                     Box::new(CultureMensch::Aranier),
                     Box::new(CultureMensch::Bornlaender),
@@ -664,12 +846,12 @@ impl PenAndPaperBackend for DSABackend {
                     Box::new(CultureElf::Firnelfen),
                     Box::new(CultureElf::Waldelfen),
                 ],
-                "Elf" => vec![
+                "Elf (18 AP)" => vec![
                     Box::new(CultureElf::Auelfen),
                     Box::new(CultureElf::Firnelfen),
                     Box::new(CultureElf::Waldelfen),
                 ],
-                "Zwerg" => vec![
+                "Zwerg (61 AP)" => vec![
                     Box::new(CultureZwerg::Ambosszwerge),
                     Box::new(CultureZwerg::Brillantzwerge),
                     Box::new(CultureZwerg::Erzzwerge),
@@ -680,7 +862,7 @@ impl PenAndPaperBackend for DSABackend {
         });
         let bonus = Modifier::new("Eigenschaftsbonus", |p| {
             match p.get_modifier(&"Rasse".to_string()).name().as_str() {
-                "Mensch" => vec![
+                "Mensch (0 AP)" => vec![
                     Box::new(AttributeBonus::MU(1)),
                     Box::new(AttributeBonus::KL(1)),
                     Box::new(AttributeBonus::IN(1)),
@@ -690,7 +872,7 @@ impl PenAndPaperBackend for DSABackend {
                     Box::new(AttributeBonus::KO(1)),
                     Box::new(AttributeBonus::KK(1)),
                 ],
-                "Halbelf" => vec![
+                "Halbelf (0 AP)" => vec![
                     Box::new(AttributeBonus::MU(1)),
                     Box::new(AttributeBonus::KL(1)),
                     Box::new(AttributeBonus::IN(1)),
@@ -700,11 +882,11 @@ impl PenAndPaperBackend for DSABackend {
                     Box::new(AttributeBonus::KO(1)),
                     Box::new(AttributeBonus::KK(1)),
                 ],
-                "Elf" => vec![
+                "Elf (18 AP)" => vec![
                     Box::new(AttributeBonus::KL(-2)),
                     Box::new(AttributeBonus::KK(-2)),
                 ],
-                "Zwerg" => vec![
+                "Zwerg (61 AP)" => vec![
                     Box::new(AttributeBonus::CH(-2)),
                     Box::new(AttributeBonus::GE(-2)),
                 ],
@@ -715,61 +897,71 @@ impl PenAndPaperBackend for DSABackend {
         character.add_modifier(races);
         character.add_modifier(cultures);
         character.add_modifier(bonus);
+        character.add_stat(Stat::Attribute("Abenterpunkte", "AP"), 0, 5000);
+        character.add_stat(Stat::Attribute("Lebensenergie", "LeP"), 0, 127);
+        character.add_stat(Stat::Attribute("Astralenergie", "AsP"), 0, 127);
+        character.add_stat(Stat::Attribute("Karmaenergie", "KaP"), 0, 127);
+        character.add_stat(Stat::Attribute("Seelenenkraft", "SK"), 0, 127);
+        character.add_stat(Stat::Attribute("Zähigkeit", "ZK"), 0, 127);
+        character.add_stat(Stat::Attribute("Ausweichen", "AW"), 0, 127);
+        character.add_stat(Stat::Attribute("Initiative", "INI"), 0, 127);
+        character.add_stat(Stat::Attribute("Geschwindigkeit", "GS"), 0, 127);
+        character.add_stat(Stat::Attribute("Schicksalspunkte", "Schips"), -127, 0);
         sheet.add_category(character);
 
         let mut attributes = StatCategory::new("Attribute");
-        attributes.add_stat(Stat::Attribute("Mut", "MU"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Klugheit", "KL"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Intuition", "IN"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Charisma", "CH"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Fingerfertigkeit", "FF"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Gewandheit", "GE"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Konstitution", "KO"), 7, 13);
-        attributes.add_stat(Stat::Attribute("Körperkraft", "KK"), 7, 13);
+        attributes.add_stat(Stat::Attribute("Mut", "MU"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Klugheit", "KL"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Intuition", "IN"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Charisma", "CH"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Fingerfertigkeit", "FF"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Gewandheit", "GE"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Konstitution", "KO"), 8, 19);
+        attributes.add_stat(Stat::Attribute("Körperkraft", "KK"), 8, 19);
         sheet.add_category(attributes);
 
         let mut weapons = StatCategory::new("Waffentalente");
-        weapons.add_stat(Stat::Ability("Dolche", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Fechtwaffen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Hiebwaffen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Säbel", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Schwerter", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Speere", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Stäbe", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Infanteriewaffen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Anderthalbhänder", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Kettenwaffen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Zweihand Hiebwaffen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Zweihand Säbel/Schwerter", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Raufen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Ringen", vec![]), -4, 4);
-        weapons.add_stat(Stat::Ability("Schilde", vec![]), -4, 4);
+        weapons.add_stat(Stat::Ability("Dolche", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Fechtwaffen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Hiebwaffen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Säbel", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Schwerter", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Speere", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Stäbe", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Infanteriewaffen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Anderthalbhänder", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Kettenwaffen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Zweihand Hiebwaffen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Zweihand Säbel/Schwerter", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Raufen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Ringen", vec![]), -1, 20);
+        weapons.add_stat(Stat::Ability("Schilde", vec![]), -1, 20);
         sheet.add_category(weapons);
 
         let mut physical = StatCategory::new("Körpertalente");
-        physical.add_stat(Stat::Ability("Schleichen", vec!["MU", "IN", "GE"]), -4, 4);
+        physical.add_stat(Stat::Ability("Schleichen", vec!["MU", "IN", "GE"]), -1, 20);
         physical.add_stat(
             Stat::Ability("Selbstbeherrschung", vec!["MU", "KO", "KK"]),
-            -4,
-            4,
+            -1,
+            20,
         );
         physical.add_stat(
             Stat::Ability("Sinnesschärfe", vec!["KL", "IN", "GE"]),
-            -4,
-            4,
+            -1,
+            20,
         );
         physical.add_stat(
             Stat::Ability("Taschendiebstahl", vec!["KL", "IN", "FF"]),
-            -4,
-            4,
+            -1,
+            20,
         );
-        physical.add_stat(Stat::Ability("Klettern", vec!["GE", "GE", "KK"]), -4, 4);
-        physical.add_stat(Stat::Ability("Athletik", vec!["GE", "GE", "IN"]), -4, 4);
-        physical.add_stat(Stat::Ability("Springen", vec!["GE", "GE", "KK"]), -4, 4);
+        physical.add_stat(Stat::Ability("Klettern", vec!["GE", "GE", "KK"]), -1, 20);
+        physical.add_stat(Stat::Ability("Athletik", vec!["GE", "GE", "IN"]), -1, 20);
+        physical.add_stat(Stat::Ability("Springen", vec!["GE", "GE", "KK"]), -1, 20);
         physical.add_stat(
             Stat::Ability("(Ent-)Fesseln", vec!["GE", "KK", "FF"]),
-            -4,
-            4,
+            -1,
+            20,
         );
         sheet.add_category(physical);
 
