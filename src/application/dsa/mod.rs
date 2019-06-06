@@ -733,6 +733,20 @@ impl PenAndPaperBackend for DSABackend {
         map.insert(Stat::Attribute("Gewandheit", "GE"), 8);
         map.insert(Stat::Attribute("Konsitution", "KO"), 8);
         map.insert(Stat::Attribute("Körperkraft", "KK"), 8);
+        map.insert(Stat::Ability("Armbrüste", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Bögen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Dolche", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Fechtwaffen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Hiebwaffen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Kettenwaffen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Lanzen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Raufen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Schilde", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Schwerter", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Stangenwaffen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Wurfwaffen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Zweihandhiebwaffen", vec!["FF"]), 6);
+        map.insert(Stat::Ability("Zweihandschwerter", vec!["FF"]), 6);
 
         self.players.push(DSAPlayer {
             _name: name,
