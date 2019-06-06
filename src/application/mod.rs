@@ -22,7 +22,7 @@ use qt_widgets::button_group::ButtonGroup;
 use qt_widgets::dialog::Dialog;
 
 use crate::qt_bind;
-use qt_bind::{as_object, delete, find_child, find_child_layout, iter, load, input};
+use qt_bind::{as_object, delete, find_child, find_child_layout, input, iter, load};
 
 pub mod backend;
 mod dsa;
@@ -47,7 +47,7 @@ impl Application {
             selected_player_index: None,
         };
 
-        let listview = find_child(main_window, "players").unwrap() as *mut ListView;
+        let listview: *mut ListView = find_child(main_window, "players").unwrap();
         let model = app.player_list_model.as_mut_ptr() as *mut AbstractItemModel;
         unsafe {
             (*listview).set_model(model);
@@ -56,114 +56,143 @@ impl Application {
         app
     }
 
+    fn create_category_header(&self, category: &StatCategory) -> *mut Widget {
+        unsafe {
+            let widget = load("ui/character_sheet/header.ui");
+            let name: *mut Label = find_child(widget, "name").unwrap();
+            (*as_object(widget)).set_object_name(&qt_string!(category.name));
+            (*name).set_text(&qt_string!(category.name));
+
+            widget
+        }
+    }
+
+    fn create_modifier_entry(&mut self, modifier: &Modifier) -> *mut Widget {
+        unsafe {
+            let widget = load("ui/character_sheet/modifier.ui");
+            (*as_object(widget)).set_object_name(&qt_string!(modifier.name));
+            let name: *mut Label = find_child(widget, "name").unwrap();
+            let values: *mut ComboBox = find_child(widget, "values").unwrap();
+
+            (*name).set_text(&qt_string!(modifier.name));
+
+            connect!(
+                values,
+                SIGNAL!("currentIndexChanged(int)"),
+                self,
+                Application,
+                Application::change_modifier,
+                (modifier.name.to_string(), values),
+                (String, *mut ComboBox)
+            );
+
+            widget
+        }
+    }
+
+    fn create_attribute_entry(&self, name: &&'static str, short: &&'static str) -> *mut Widget {
+        unsafe {
+            let widget = load("ui/character_sheet/attribute.ui");
+            let identifier: *mut Label = find_child(widget, "identifier").unwrap();
+            let calculated: *mut Label = find_child(widget, "calculated").unwrap();
+            (*as_object(widget)).set_object_name(&qt_string!(*short));
+            (*identifier).set_text(&qt_string!(format!("{} ({})", name, short)));
+            (*calculated).set_text(&qt_string!("0"));
+
+            widget
+        }
+    }
+
+    fn create_ability_entry(&self, name: &&'static str, stats: &Vec<&'static str>) -> *mut Widget {
+        unsafe {
+            let widget = load("ui/character_sheet/ability.ui");
+            let identifier: *mut Label = find_child(widget, "identifier").unwrap();
+            let stats_label: *mut Label = find_child(widget, "stats").unwrap();
+            let calculated: *mut Label = find_child(widget, "calculated").unwrap();
+            (*as_object(widget)).set_object_name(&qt_string!(*name));
+            (*identifier).set_text(&qt_string!(*name));
+            (*stats_label).set_text(&qt_string!(stats.join(" ")));
+            (*calculated).set_text(&qt_string!("0"));
+
+            widget
+        }
+    }
+
+    fn create_calculated_entry(&self, name: &&'static str) -> *mut Widget {
+        unsafe {
+            let widget = load("ui/character_sheet/calculated.ui");
+            let identifier: *mut Label = find_child(widget, "identifier").unwrap();
+            let calculated: *mut Label = find_child(widget, "calculated").unwrap();
+            (*as_object(widget)).set_object_name(&qt_string!(*name));
+            (*identifier).set_text(&qt_string!(*name));
+            (*calculated).set_text(&qt_string!("0"));
+
+            widget
+        }
+    }
+
+    fn create_stat_entry(&mut self, stat: &StatDescription, category_name: String) -> *mut Widget {
+        let widget = match &stat.stat {
+            Stat::Attribute(name, short) => self.create_attribute_entry(name, short),
+            Stat::Ability(name, stats) => self.create_ability_entry(name, stats),
+            Stat::Calculated(name) => self.create_calculated_entry(name),
+        };
+
+        let value: Option<*mut SpinBox> = find_child(widget, "value");
+
+        unsafe {
+            if let Some(value) = value {
+                (*value).set_range(stat.min, stat.max);
+                connect!(
+                    value,
+                    SIGNAL!("valueChanged(int)"),
+                    self,
+                    Application,
+                    Application::change_value,
+                    (category_name, stat.stat.clone(), value),
+                    (String, Stat, *mut SpinBox)
+                );
+            }
+        }
+
+        widget
+    }
+
     fn build_character_sheet(&mut self) {
         if let Some(backend) = &mut self.backend {
-            let layout = unsafe {
-                &mut *(find_child(self.main_window, "character_sheet").unwrap() as *mut VBoxLayout)
-            };
+            let layout: *mut VBoxLayout = find_child(self.main_window, "character_sheet").unwrap();
 
-            let mut child = layout.take_at(0);
-            while !child.is_null() {
-                delete(child as *mut Object);
-                child = layout.take_at(0);
+            unsafe {
+                let mut child = (*layout).take_at(0);
+                while !child.is_null() {
+                    delete(child as *mut Object);
+                    child = (*layout).take_at(0);
+                }
             }
 
             let character_sheet = backend.character_sheet();
 
             for category in character_sheet.categories() {
                 unsafe {
-                    let widget = load("ui/character_sheet/header.ui");
-                    let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
-                    (*as_object(widget)).set_object_name(&qt_string!(category.name));
-                    name.set_text(&qt_string!(category.name));
-
-                    layout.add_widget(widget);
+                    (*layout).add_widget(self.create_category_header(category));
                 }
 
                 for entry in &category.entries {
-                    match entry {
-                        CategoryEntry::Modifier(modifier) => unsafe {
-                            let widget = load("ui/character_sheet/modifier.ui");
-                            (*as_object(widget)).set_object_name(&qt_string!(modifier.name));
-                            let name = &mut *(find_child(widget, "name").unwrap() as *mut Label);
-                            let values =
-                                &mut *(find_child(widget, "values").unwrap() as *mut ComboBox);
-
-                            name.set_text(&qt_string!(modifier.name));
-
-                            connect!(
-                                as_object(values),
-                                SIGNAL!("currentIndexChanged(int)"),
-                                self,
-                                Application,
-                                Application::change_modifier,
-                                (modifier.name.to_string(), values),
-                                (String, *mut ComboBox)
-                            );
-
-                            layout.add_widget(widget);
-                        },
+                    let widget = match entry {
+                        CategoryEntry::Modifier(modifier) => self.create_modifier_entry(modifier),
                         CategoryEntry::Stat(stat) => {
-                            let widget = match &stat.stat {
-                                Stat::Attribute(name, short) => unsafe {
-                                    let widget = load("ui/character_sheet/attribute.ui");
-                                    let identifier = &mut *(find_child(widget, "identifier")
-                                        .unwrap()
-                                        as *mut Label);
-                                    let calculated = &mut *(find_child(widget, "calculated")
-                                        .unwrap()
-                                        as *mut Label);
-                                    (*as_object(widget)).set_object_name(&qt_string!(*short));
-                                    identifier
-                                        .set_text(&qt_string!(format!("{} ({})", name, short)));
-                                    calculated.set_text(&qt_string!("0"));
-
-                                    widget
-                                },
-                                Stat::Ability(name, stats) => unsafe {
-                                    let widget = load("ui/character_sheet/ability.ui");
-                                    let identifier = &mut *(find_child(widget, "identifier")
-                                        .unwrap()
-                                        as *mut Label);
-                                    let stats_label =
-                                        &mut *(find_child(widget, "stats").unwrap() as *mut Label);
-                                    let calculated = &mut *(find_child(widget, "calculated")
-                                        .unwrap()
-                                        as *mut Label);
-                                    (*as_object(widget)).set_object_name(&qt_string!(*name));
-                                    identifier.set_text(&qt_string!(*name));
-                                    stats_label.set_text(&qt_string!(stats.join(" ")));
-                                    calculated.set_text(&qt_string!("0"));
-
-                                    widget
-                                },
-                            };
-
-                            let value = find_child(widget, "value").unwrap();
-                            unsafe {
-                                (*(value as *mut SpinBox)).set_range(stat.min, stat.max);
-                                connect!(
-                                    value,
-                                    SIGNAL!("valueChanged(int)"),
-                                    &mut *self,
-                                    Application,
-                                    Application::change_value,
-                                    (
-                                        category.name.to_string(),
-                                        stat.stat.clone(),
-                                        value as *mut SpinBox
-                                    ),
-                                    (String, Stat, *mut SpinBox)
-                                );
-                            }
-
-                            unsafe {
-                                layout.add_widget(widget);
-                            }
+                            self.create_stat_entry(stat, category.name.to_string())
                         }
+                    };
+
+                    unsafe {
+                        (*layout).add_widget(widget);
                     }
                 }
-                layout.add_spacing(25);
+
+                unsafe {
+                    (*layout).add_spacing(25);
+                }
             }
         }
     }
@@ -171,9 +200,7 @@ impl Application {
     fn update_character_sheet(&mut self) {
         if let (Some(backend), Some(player_index)) = (&mut self.backend, self.selected_player_index)
         {
-            let layout = unsafe {
-                &mut *(find_child(self.main_window, "character_sheet").unwrap() as *mut VBoxLayout)
-            };
+            let layout: *mut VBoxLayout = find_child(self.main_window, "character_sheet").unwrap();
             let sheet = backend.character_sheet();
 
             for category in sheet.categories() {
@@ -183,50 +210,51 @@ impl Application {
                     match entry {
                         CategoryEntry::Modifier(modifier) => {
                             let values = modifier.get_values(player);
-                            let index = match values.iter().position(|x| {
-                                x.as_ref().name()
-                                    == player.get_modifier(&modifier.name.to_string()).name()
-                            }) {
-                                Some(x) => x,
-                                None => {
+                            let current = player.get_modifier(&modifier.name.to_string());
+                            let index = values
+                                .iter()
+                                .position(|x| x.name() == current.name())
+                                .unwrap_or_else(|| {
                                     player.set_modifier(
                                         modifier.name.to_string(),
                                         modifier.get_values(player).swap_remove(0),
                                     );
                                     0
-                                }
-                            };
+                                });
 
+                            let entry: *mut Layout =
+                                find_child_layout(layout, modifier.name).unwrap();
+                            let combobox: *mut ComboBox = find_child(entry, "values").unwrap();
                             unsafe {
-                                let entry = find_child_layout(layout, modifier.name).unwrap()
-                                    as *mut Layout;
-                                let combobox =
-                                    &mut (*(find_child(entry, "values").unwrap() as *mut ComboBox));
                                 (*as_object(combobox)).block_signals(true);
-                                while combobox.count() > 0 {
-                                    combobox.remove_item(0);
+                                while (*combobox).count() > 0 {
+                                    (*combobox).remove_item(0);
                                 }
                                 for value in values {
-                                    combobox.add_item(&qt_string!(value.name()));
+                                    (*combobox).add_item(&qt_string!(value.name()));
                                 }
-                                combobox.set_current_index(index as i32);
+                                (*combobox).set_current_index(index as i32);
                                 (*as_object(combobox)).block_signals(false);
                             }
                         }
                         CategoryEntry::Stat(stat) => {
-                            let widget = match &stat.stat {
-                                Stat::Attribute(_, short) => {
-                                    find_child_layout(layout, short).unwrap()
-                                }
-                                Stat::Ability(name, _) => find_child_layout(layout, name).unwrap(),
-                            } as *mut Layout;
+                            let widget: *mut Widget = match &stat.stat {
+                                Stat::Attribute(_, short) => find_child_layout(layout, short),
+                                Stat::Ability(name, _) => find_child_layout(layout, name),
+                                Stat::Calculated(name) => find_child_layout(layout, name),
+                            }
+                            .unwrap();
                             let calculated = sheet.calc_value(player, &category, &stat.stat);
                             let val = player.get_value(&stat.stat);
+                            let calculated_label: *mut Label =
+                                find_child(widget, "calculated").unwrap();
                             unsafe {
-                                (*(find_child(widget, "calculated").unwrap() as *mut Label))
-                                    .set_text(&qt_string!(calculated));
-                                (*(find_child(widget, "value").unwrap() as *mut SpinBox))
-                                    .set_value(val);
+                                (*calculated_label).set_text(&qt_string!(calculated));
+
+                                let spinbox: Option<*mut SpinBox> = find_child(widget, "value");
+                                if let Some(spinbox) = spinbox {
+                                    (*spinbox).set_value(val);
+                                };
                             }
                         }
                     }
@@ -290,7 +318,7 @@ impl Application {
         println!("New stub");
         self.backend = Some(Box::new(DSABackend::new()));
         unsafe {
-            (*(find_child(self.main_window, "centralwidget").unwrap() as *mut Widget))
+            (*(find_child::<Widget, _>(self.main_window, "centralwidget").unwrap()))
                 .set_enabled(true);
         }
 
@@ -322,7 +350,7 @@ impl Application {
         self.selected_player_index = iter(&selections).next().map(|x| x.row() as usize);
 
         unsafe {
-            (*(find_child(self.main_window, "player_data").unwrap() as *mut Widget))
+            (*(find_child::<Widget, _>(self.main_window, "player_data").unwrap()))
                 .set_enabled(selections.size() == 1);
         }
 
@@ -331,35 +359,45 @@ impl Application {
 
     pub fn add_player(&mut self) {
         if let Some(var) = &mut self.backend {
-            match input(self.main_window, "Spieler erstellen", "Spielername eingeben", "") {
+            match input(
+                self.main_window,
+                "Spieler erstellen",
+                "Spielername eingeben",
+                "",
+            ) {
                 Some(str) => {
                     let player = var.add_player(str);
-                    
+
                     let model = &mut self.player_list_model;
                     let row_count = model.row_count(());
                     model.insert_row(row_count);
                     let index = model.index(row_count);
                     model.set_data((&index, &Variant::new0(&qt_string!(player.name()))));
-                },
-                _ => ()
+                }
+                _ => (),
             }
         }
     }
 
     pub fn edit_player(&mut self) {
         if let Some(var) = &mut self.backend {
-            let listview = find_child(self.main_window, "players").unwrap() as *mut ListView;
+            let listview: *mut ListView = find_child(self.main_window, "players").unwrap();
             let indexes = unsafe { (*(*listview).selection_model()).selected_indexes() };
             for val in iter(&indexes) {
                 let player = var.get_player(val.row() as usize);
-                match input(self.main_window, "Spieler bearbeiten", "Spielername eingeben:", player.name()) {
+                match input(
+                    self.main_window,
+                    "Spieler bearbeiten",
+                    "Spielername eingeben:",
+                    player.name(),
+                ) {
                     Some(str) => {
                         let model = &mut self.player_list_model;
-                        
+
                         player.set_name(str);
                         model.set_data((val, &Variant::new0(&qt_string!(player.name()))));
-                    },
-                    _ => ()
+                    }
+                    _ => (),
                 }
             }
         }
@@ -367,7 +405,7 @@ impl Application {
 
     pub fn remove_player(&mut self) {
         if let Some(var) = &mut self.backend {
-            let listview = find_child(self.main_window, "players").unwrap() as *mut ListView;
+            let listview: *mut ListView = find_child(self.main_window, "players").unwrap();
             let indexes = unsafe { (*(*listview).selection_model()).selected_indexes() };
 
             for val in iter(&indexes) {
@@ -380,7 +418,7 @@ impl Application {
 
     pub fn update_time(&mut self) {
         if let Some(backend) = &mut self.backend {
-            let time_label = find_child(self.main_window, "time").unwrap() as *mut Label;
+            let time_label: *mut Label = find_child(self.main_window, "time").unwrap();
 
             let (hour, minute) = backend.calendar().get_time();
             unsafe {
@@ -391,7 +429,7 @@ impl Application {
 
     pub fn update_date(&mut self) {
         if let Some(backend) = &mut self.backend {
-            let date_label = find_child(self.main_window, "date").unwrap() as *mut Label;
+            let date_label: *mut Label = find_child(self.main_window, "date").unwrap();
 
             let (day, month, year) = backend.calendar().get_date();
             unsafe {
@@ -413,8 +451,8 @@ impl Application {
             let cal = backend.calendar();
             let dialog = load("ui/date_dialog.ui") as *mut Dialog;
 
-            let year_label = find_child(dialog, "year").unwrap() as *mut Label;
-            let month_label = find_child(dialog, "month").unwrap() as *mut Label;
+            let year_label: *mut Label = find_child(dialog, "year").unwrap();
+            let month_label: *mut Label = find_child(dialog, "month").unwrap();
 
             let (day, month, year) = cal.get_date();
 
@@ -425,7 +463,7 @@ impl Application {
                     cal.get_month_name(month),
                     month
                 )));
-                (*(find_child(dialog, format!("day{}", day).as_str()).unwrap() as *mut PushButton))
+                (*(find_child::<PushButton, _>(dialog, format!("day{}", day).as_str()).unwrap()))
                     .set_checked(true);
             }
 
@@ -438,7 +476,7 @@ impl Application {
                 ) {
                     *year -= 1;
 
-                    let year_label = find_child(*dialog, "year").unwrap() as *mut Label;
+                    let year_label: *mut Label = find_child(*dialog, "year").unwrap();
                     unsafe {
                         (*year_label).set_text(&qt_string!(*year));
                     }
@@ -450,7 +488,7 @@ impl Application {
                 ) {
                     *year += 1;
 
-                    let year_label = find_child(*dialog, "year").unwrap() as *mut Label;
+                    let year_label: *mut Label = find_child(*dialog, "year").unwrap();
                     unsafe {
                         (*year_label).set_text(&qt_string!(*year));
                     }
@@ -470,7 +508,7 @@ impl Application {
                         *month += 12
                     }
 
-                    let month_label = find_child(*dialog, "month").unwrap() as *mut Label;
+                    let month_label: *mut Label = find_child(*dialog, "month").unwrap();
                     unsafe {
                         (*month_label).set_text(&qt_string!(format!(
                             "{} ({})",
@@ -491,7 +529,7 @@ impl Application {
                 ) {
                     *month = (*month % calendar.months_per_year()) + 1;
 
-                    let month_label = find_child(*dialog, "month").unwrap() as *mut Label;
+                    let month_label: *mut Label = find_child(*dialog, "month").unwrap();
                     unsafe {
                         (*month_label).set_text(&qt_string!(format!(
                             "{} ({})",
@@ -545,7 +583,7 @@ impl Application {
 
             let result = unsafe { (*dialog).exec() };
 
-            let buttongroup = find_child(dialog, "buttonGroup").unwrap() as *mut ButtonGroup;
+            let buttongroup: *mut ButtonGroup = find_child(dialog, "buttonGroup").unwrap();
             let day: i32 = unsafe {
                 (*((*buttongroup).checked_button() as *mut Object))
                     .object_name()

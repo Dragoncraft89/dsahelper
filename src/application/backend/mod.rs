@@ -4,6 +4,7 @@ use std::hash::{Hash, Hasher};
 pub enum Stat {
     Attribute(&'static str, &'static str),
     Ability(&'static str, Vec<&'static str>),
+    Calculated(&'static str),
 }
 
 impl Eq for Stat {}
@@ -13,6 +14,7 @@ impl PartialEq for Stat {
         match (self, other) {
             (&Stat::Attribute(_, ref a), &Stat::Attribute(_, ref b)) => a == b,
             (&Stat::Ability(ref a, _), &Stat::Ability(ref b, _)) => a == b,
+            (&Stat::Calculated(ref a), &Stat::Calculated(ref b)) => a == b,
             _ => false,
         }
     }
@@ -23,6 +25,7 @@ impl Hash for Stat {
         match self {
             &Stat::Attribute(_, ref a) => a.hash(state),
             &Stat::Ability(ref a, _) => a.hash(state),
+            &Stat::Calculated(ref a) => a.hash(state),
         }
     }
 }
@@ -83,6 +86,18 @@ impl StatCategory {
 
     pub fn add_modifier(&mut self, modifier: Modifier) {
         self.entries.push(CategoryEntry::Modifier(modifier));
+    }
+
+    pub fn find_stat(&self, name: &String) -> Option<&StatDescription> {
+        self.entries.iter().find_map(|x| match x {
+            CategoryEntry::Stat(description) => match description.stat {
+                Stat::Attribute(_, identifier) if identifier == name => Some(description),
+                Stat::Ability(identifier, _) if identifier == name => Some(description),
+                Stat::Calculated(identifier) if identifier == name => Some(description),
+                _ => None
+            },
+            CategoryEntry::Modifier(_) => None,
+        })
     }
 }
 

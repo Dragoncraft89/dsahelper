@@ -811,6 +811,36 @@ impl PenAndPaperBackend for DSABackend {
                             _ => 0,
                         })
                 }
+                Stat::Calculated(name) => {
+                    let len = name.len();
+                    if name.ends_with(" - Attacke") {
+                        let ability = c.find_stat(&name.split_at(len - 10).0.to_string()).unwrap();
+                        let level = p.get_value(&ability.stat);
+
+                        val += level + (calc(sheet, p, c, &Stat::Attribute("Mut", "MU")) - 8) / 3;
+                    }
+                    if name.ends_with(" - Parade") {
+                        let ability = c.find_stat(&name.split_at(len - 9).0.to_string()).unwrap();
+                        let level = p.get_value(&ability.stat);
+
+                        let max = match &ability.stat {
+                            Stat::Ability(_, attribs) => attribs
+                                .iter()
+                                .map(|x| (calc(sheet, p, c, &Stat::Attribute("", x)) - 8) / 3)
+                                .max().unwrap(),
+                            _ => 0,
+                        };
+
+                        val += level + max;
+                    }
+                    if name.ends_with(" - Fernkampf") {
+                        let ability = c.find_stat(&name.split_at(len - 12).0.to_string()).unwrap();
+                        let level = p.get_value(&ability.stat);
+
+                        val += level
+                            + (calc(sheet, p, c, &Stat::Attribute("Fingerfertigkeit", "FF")) - 8) / 3;
+                    }
+                }
                 _ => (),
             }
 
@@ -949,19 +979,47 @@ impl PenAndPaperBackend for DSABackend {
 
         let mut weapons = StatCategory::new("Kampftechnik");
         weapons.add_stat(Stat::Ability("Armbrüste", vec!["FF"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Armbrüste - Fernkampf"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Armbrüste - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Bögen", vec!["FF"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Bögen - Fernkampf"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Bögen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Dolche", vec!["GE"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Dolche - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Dolche - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Fechtwaffen", vec!["GE"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Fechtwaffen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Fechtwaffen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Hiebwaffen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Hiebwaffen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Hiebwaffen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Kettenwaffen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Kettenwaffen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Kettenwaffen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Lanzen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Lanzen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Lanzen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Raufen", vec!["GE", "KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Raufen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Raufen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Schilde", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Schilde - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Schilde - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Schwerter", vec!["GE", "KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Schwerter - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Schwerter - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Stangenwaffen", vec!["GE", "KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Stangenwaffen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Stangenwaffen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Wurfwaffen", vec!["FF"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Wurfwaffen - Fernkampf"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Wurfwaffen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Zweihandhiebwaffen", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Zweihandhiebwaffen - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Zweihandhiebwaffen - Parade"), 0, 0);
         weapons.add_stat(Stat::Ability("Zweihandschwerter", vec!["KK"]), -1, 25);
+        weapons.add_stat(Stat::Calculated("Zweihandschwerter - Attacke"), 0, 0);
+        weapons.add_stat(Stat::Calculated("Zweihandschwerter - Parade"), 0, 0);
         sheet.add_category(weapons);
 
         let mut physical = StatCategory::new("Körpertalente");

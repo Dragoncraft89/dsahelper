@@ -50,9 +50,9 @@ pub extern "C" fn rust_free(obj: *mut c_void) {
 
 pub fn as_object<T: StaticCast<Object>>(w: *mut T) -> *mut Object {
     unsafe {
-        let obj: &mut T = Box::leak(Box::from_raw(w));
-
-        T::static_cast_mut(obj) as *mut Object
+        w.as_mut()
+            .map(|obj| T::static_cast_mut(obj) as *mut Object)
+            .unwrap_or(std::ptr::null_mut())
     }
 }
 
@@ -131,7 +131,7 @@ macro_rules! connect {
         #[allow(unused_unsafe)]
         unsafe {
             qt_bind::MANAGER.lock().unwrap().connect(
-                $sender,
+                $sender as *mut qt_widgets::qt_core::object::Object,
                 $signal,
                 std::mem::transmute(data),
                 temp_call as *mut std::os::raw::c_void,
@@ -157,7 +157,7 @@ macro_rules! connect {
             let ptr =
                 std::boxed::Box::into_raw(std::boxed::Box::new(arg)) as *mut std::os::raw::c_void;
             qt_bind::MANAGER.lock().unwrap().connect(
-                $sender,
+                $sender as *mut qt_widgets::qt_core::object::Object,
                 $signal,
                 std::mem::transmute(data),
                 temp_call as *mut std::os::raw::c_void,
@@ -177,14 +177,14 @@ macro_rules! disconnect {
     }};
 }
 
-pub fn find_child<T: StaticCast<Object>>(t: *mut T, name: &str) -> Option<*mut Object> {
+pub fn find_child<R, T: StaticCast<Object>>(t: *mut T, name: &str) -> Option<*mut R> {
     let obj = as_object(t);
     find_child_internal(obj, name)
 }
 
-fn find_child_internal(obj: *mut Object, name: &str) -> Option<*mut Object> {
+fn find_child_internal<R>(obj: *mut Object, name: &str) -> Option<*mut R> {
     if unsafe { (*obj).object_name().compare(&String::from(name)) == 0 } {
-        return Some(obj);
+        return Some(obj as *mut R);
     }
 
     let children = unsafe { (*obj).children() };
@@ -196,7 +196,7 @@ fn find_child_internal(obj: *mut Object, name: &str) -> Option<*mut Object> {
     None
 }
 
-pub fn find_child_layout<T: StaticCast<Layout>>(t: *mut T, name: &str) -> Option<*mut Object> {
+pub fn find_child_layout<R, T: StaticCast<Layout>>(t: *mut T, name: &str) -> Option<*mut R> {
     let layout = unsafe {
         let obj: &mut T = Box::leak(Box::from_raw(t));
 
@@ -206,7 +206,7 @@ pub fn find_child_layout<T: StaticCast<Layout>>(t: *mut T, name: &str) -> Option
     find_child_layout_internal(layout, name)
 }
 
-fn find_child_layout_internal(layout: *mut Layout, name: &str) -> Option<*mut Object> {
+fn find_child_layout_internal<R>(layout: *mut Layout, name: &str) -> Option<*mut R> {
     unsafe {
         for i in 0..(*layout).count() {
             let child = (*layout).item_at(i);
@@ -289,12 +289,12 @@ macro_rules! qt_string {
 
 pub struct ListModelIterator<'a> {
     index: i32,
-    list: &'a ListModelIndex
+    list: &'a ListModelIndex,
 }
 
 impl<'a> Iterator for ListModelIterator<'a> {
     type Item = &'a ModelIndex;
-    
+
     fn next(&mut self) -> Option<&'a ModelIndex> {
         self.index += 1;
 
@@ -304,13 +304,21 @@ impl<'a> Iterator for ListModelIterator<'a> {
 
         None
     }
-} 
-
-pub fn iter<'a>(list: &'a ListModelIndex) -> ListModelIterator<'a> {
-    ListModelIterator { index: 0, list: list }
 }
 
-pub fn input(window: *mut Widget, title: &str, label: &str, text: &str) -> Option<std::string::String> {
+pub fn iter<'a>(list: &'a ListModelIndex) -> ListModelIterator<'a> {
+    ListModelIterator {
+        index: 0,
+        list: list,
+    }
+}
+
+pub fn input(
+    window: *mut Widget,
+    title: &str,
+    label: &str,
+    text: &str,
+) -> Option<std::string::String> {
     let mut ok = false;
     let name = unsafe {
         InputDialog::get_text((
@@ -325,6 +333,6 @@ pub fn input(window: *mut Widget, title: &str, label: &str, text: &str) -> Optio
 
     match ok {
         true => Some(name.to_std_string()),
-        false => None
+        false => None,
     }
 }
