@@ -698,6 +698,49 @@ impl PenAndPaperCalendar for AventurienCalendar {
     }
 }
 
+enum LevelModificator {
+    A,
+    B,
+    C,
+    D,
+    E,
+}
+
+fn get_cost(m: &LevelModificator, mut from: i32, mut to: i32) -> i32 {
+    from = max(from, 0);
+    to = max(to, 0);
+    match m {
+        LevelModificator::A => {
+            let n = max(to - 10, 0) - max(from - 10, 0);
+            (min(to, 10) - min(from, 10)) + (n * (n + 1) / 2)
+        }
+        LevelModificator::B => {
+            let n = max(to - 10, 0) - max(from - 10, 0);
+            2 * (min(to, 10) - min(from, 10)) + (n * (n + 1))
+        }
+        LevelModificator::C => {
+            let n = max(to - 10, 0) - max(from - 10, 0);
+            3 * (min(to, 10) - min(from, 10)) + (3 * n * (n + 1) / 2)
+        }
+        LevelModificator::D => {
+            let n = max(to - 10, 0) - max(from - 10, 0);
+            4 * (min(to, 10) - min(from, 10)) + (2 * n * (n + 1))
+        }
+        LevelModificator::E => {
+            let n = max(to - 13, 0) - max(from - 13, 0);
+            15 * (min(max(to, 1), 13) - min(max(from, 1), 13)) + (15 * n * (n + 1) / 2)
+        }
+    }
+}
+
+fn get_modifier(s: &Stat) -> Option<LevelModificator> {
+    match s {
+        Stat::Attribute(_, _) => Some(LevelModificator::E),
+        Stat::Ability(name, _) => panic!("Unimplemented LevelModifier for {}", name),
+        Stat::Calculated(_) => None,
+    }
+}
+
 pub struct DSABackend {
     cal: AventurienCalendar,
     players: Vec<DSAPlayer>,
@@ -725,6 +768,7 @@ impl PenAndPaperBackend for DSABackend {
 
     fn add_player(&mut self, name: String) -> &Player {
         let mut map = HashMap::new();
+        map.insert(Stat::Attribute("Abenteuerpunkte", "AP"), 1000);
         map.insert(Stat::Attribute("Mut", "MU"), 8);
         map.insert(Stat::Attribute("Klugheit", "KL"), 8);
         map.insert(Stat::Attribute("Intuition", "IN"), 8);
@@ -800,30 +844,16 @@ impl PenAndPaperBackend for DSABackend {
                 }
                 Stat::Attribute(_, "Schips") => val += 3,
                 Stat::Attribute(_, "AP") => {
-                    val -= sheet
-                        .get_category("Attribute")
-                        .unwrap()
-                        .entries
-                        .iter()
-                        .fold(0, |val, entry| match entry {
-                            CategoryEntry::Stat(stat) => {
-                                val + match p.get_value(&stat.stat) {
-                                    09 => 15,
-                                    10 => 2 * 15,
-                                    11 => 3 * 15,
-                                    12 => 4 * 15,
-                                    13 => 5 * 15,
-                                    14 => 6 * 15,
-                                    15 => 6 * 15 + 30,
-                                    16 => 6 * 15 + 45,
-                                    17 => 6 * 15 + 60,
-                                    18 => 6 * 15 + 75,
-                                    19 => 6 * 17 + 90,
-                                    _ => 0,
-                                }
+                    val -= sheet.categories().iter().fold(0, |val, c| {
+                        val + c.entries.iter().fold(0, |val, entry| {
+                            val + match entry {
+                                CategoryEntry::Stat(stat) => get_modifier(&stat.stat)
+                                    .map(|x| get_cost(&x, 8, p.get_value(&stat.stat)))
+                                    .unwrap_or(0),
+                                _ => 0,
                             }
-                            _ => 0,
                         })
+                    })
                 }
                 Stat::Calculated(name) => {
                     let len = name.len();
@@ -841,7 +871,8 @@ impl PenAndPaperBackend for DSABackend {
                             Stat::Ability(_, attribs) => attribs
                                 .iter()
                                 .map(|x| (calc(sheet, p, c, &Stat::Attribute("", x)) - 8) / 3)
-                                .max().unwrap(),
+                                .max()
+                                .unwrap(),
                             _ => 0,
                         };
 
@@ -852,7 +883,8 @@ impl PenAndPaperBackend for DSABackend {
                         let level = p.get_value(&ability.stat);
 
                         val += level
-                            + (calc(sheet, p, c, &Stat::Attribute("Fingerfertigkeit", "FF")) - 8) / 3;
+                            + (calc(sheet, p, c, &Stat::Attribute("Fingerfertigkeit", "FF")) - 8)
+                                / 3;
                     }
                 }
                 _ => (),
